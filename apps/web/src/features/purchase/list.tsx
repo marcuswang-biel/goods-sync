@@ -9,6 +9,15 @@ import { Trans, useLingui } from '@lingui/react/macro';
 import { useQuery } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Empty, EmptyDescription, EmptyHeader } from '@/components/ui/empty';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Pagination, PaginationContent, PaginationItem } from '@/components/ui/pagination';
+import { Skeleton } from '@/components/ui/skeleton';
 import { REJECTION_MESSAGES, STOCK_ERROR_MESSAGES } from '@/features/stock/errors';
 import { UNIT_LABELS } from '@/features/stock/labels';
 import { todayIso } from '@/features/stock/money';
@@ -71,20 +80,20 @@ export function PurchaseList({ spaceId }: { spaceId: Id<'spaces'> }) {
 	);
 
 	return (
-		<div className="mx-auto grid w-full max-w-[1128px] gap-3 px-4 py-6 lg:px-0">
+		<div className="mx-auto flex w-full max-w-[1128px] flex-col gap-3 px-4 py-6 lg:px-0">
 			<div className="flex items-end justify-between gap-3">
-				<h1 className="text-[24px] leading-none font-medium">
+				<h1 className="text-2xl leading-none font-medium">
 					<Trans>採購</Trans>
 				</h1>
-				<p className="text-[30px] leading-none font-bold tabular-nums">{formatCents(total)}</p>
+				<p className="text-3xl leading-none font-bold tabular-nums">{formatCents(total)}</p>
 			</div>
-			<p className="text-sm">
+			<p className="text-muted-foreground text-sm">
 				<Trans>未採購合計</Trans>
 			</p>
 			{error && (
-				<p role="alert" className="text-sm text-[#831c1e]">
-					{error}
-				</p>
+				<Alert variant="destructive">
+					<AlertDescription>{error}</AlertDescription>
+				</Alert>
 			)}
 			<ShortfallPurchase
 				spaceId={spaceId}
@@ -92,105 +101,112 @@ export function PurchaseList({ spaceId }: { spaceId: Id<'spaces'> }) {
 				openItemIds={openItemIds}
 				onError={setError}
 			/>
-			<section className="rounded-[8px] border border-[#e6e6e6] bg-white">
-				<h2 className="border-b border-[#f0f0f0] px-4 py-3 text-base font-medium">
-					<Trans>採購記錄</Trans>
-				</h2>
-				{list.isPending ? (
-					<p className="p-4 text-sm">{t`正在讀採購清單。`}</p>
-				) : purchases.length === 0 ? (
-					<p className="p-4 text-sm text-[#6b6b6b]">{t`清單是空的。`}</p>
-				) : (
-					<ul>
-						{visible.map((purchase) => (
-							<li
-								key={purchase._id}
-								className="border-b border-[#f0f0f0] px-4 py-3 last:border-b-0"
-							>
-								<ul>
-									{purchase.items.map((item) => (
-										<li key={item._id} className="flex min-h-11 items-center gap-3">
-											<div className="min-w-0 flex-1">
-												<p className="truncate text-sm">{item.name}</p>
-												{purchase.status === 'open' ? (
-													<BuyAmount spaceId={spaceId} item={item} onError={setError} />
-												) : (
-													<p className="text-xs text-[#6b6b6b]">
-														<Trans>補 {item.quantity}</Trans>
-														{item.unit ? ` ${t(UNIT_LABELS[item.unit])}` : ''}
-													</p>
-												)}
-											</div>
-										</li>
-									))}
-								</ul>
-								<div className="flex min-h-11 items-center justify-end gap-3">
-									{purchase.status === 'bought' && (
-										<p className="mr-auto text-xs text-[#6b6b6b]">
-											<Trans>已採購</Trans>
+			<Card>
+				<CardHeader className="border-b">
+					<CardTitle>
+						<h2>
+							<Trans>採購記錄</Trans>
+						</h2>
+					</CardTitle>
+				</CardHeader>
+				<CardContent>
+					{list.isPending ? (
+						<div aria-busy="true" className="flex flex-col gap-2">
+							<Skeleton className="h-4 w-40" />
+							<span className="sr-only">{t`正在讀採購清單。`}</span>
+						</div>
+					) : purchases.length === 0 ? (
+						<Empty>
+							<EmptyHeader>
+								<EmptyDescription>{t`清單是空的。`}</EmptyDescription>
+							</EmptyHeader>
+						</Empty>
+					) : (
+						<ul>
+							{visible.map((purchase) => (
+								<li key={purchase._id} className="border-b py-3 last:border-b-0">
+									<ul>
+										{purchase.items.map((item) => (
+											<li key={item._id} className="flex min-h-11 items-center gap-3">
+												<div className="min-w-0 flex-1">
+													<p className="truncate text-sm">{item.name}</p>
+													{purchase.status === 'open' ? (
+														<BuyAmount spaceId={spaceId} item={item} onError={setError} />
+													) : (
+														<p className="text-muted-foreground text-xs">
+															<Trans>補 {item.quantity}</Trans>
+															{item.unit ? ` ${t(UNIT_LABELS[item.unit])}` : ''}
+														</p>
+													)}
+												</div>
+											</li>
+										))}
+									</ul>
+									<div className="flex min-h-11 items-center justify-end gap-3">
+										{purchase.status === 'bought' && (
+											<Badge variant="secondary" className="mr-auto">
+												<Trans>已採購</Trans>
+											</Badge>
+										)}
+										<p className="text-sm font-bold tabular-nums">
+											{formatCents(purchase.totalCents)}
 										</p>
-									)}
-									<p className="text-sm font-bold tabular-nums">
-										{formatCents(purchase.totalCents)}
-									</p>
-									{purchase.status === 'open' && (
-										<button
-											type="button"
-											className={
-												purchase._id === firstOpen?._id
-													? 'h-9 rounded-[6px] bg-[#141414] px-3 text-sm text-white'
-													: 'h-9 text-sm hover:underline'
-											}
-											onClick={() => void buy(purchase.clientMutationId)}
+										{purchase.status === 'open' && (
+											<Button
+												variant={purchase._id === firstOpen?._id ? 'default' : 'ghost'}
+												size="sm"
+												onClick={() => void buy(purchase.clientMutationId)}
+											>
+												<Trans>已採購</Trans>
+											</Button>
+										)}
+									</div>
+								</li>
+							))}
+						</ul>
+					)}
+					{pageCount > 1 && (
+						<Pagination aria-label={t`採購記錄分頁`} className="justify-end border-t pt-3">
+							<PaginationContent>
+								<PaginationItem>
+									<Button
+										variant="ghost"
+										size="sm"
+										disabled={safePage === 0}
+										onClick={() => setPage(safePage - 1)}
+									>
+										<Trans>上一頁</Trans>
+									</Button>
+								</PaginationItem>
+								{Array.from({ length: pageCount }, (_, index) => (
+									<PaginationItem key={index}>
+										<Button
+											variant={index === safePage ? 'default' : 'ghost'}
+											size="icon"
+											aria-label={t`第 ${index + 1} 頁`}
+											aria-current={index === safePage ? 'page' : undefined}
+											onClick={() => setPage(index)}
+											className="tabular-nums"
 										>
-											<Trans>已採購</Trans>
-										</button>
-									)}
-								</div>
-							</li>
-						))}
-					</ul>
-				)}
-				{pageCount > 1 && (
-					<nav
-						aria-label={t`採購記錄分頁`}
-						className="flex flex-wrap items-center justify-end gap-1 border-t border-[#f0f0f0] px-4 py-3"
-					>
-						<button
-							type="button"
-							disabled={safePage === 0}
-							onClick={() => setPage(safePage - 1)}
-							className="h-9 px-3 text-sm disabled:text-[#6b6b6b]"
-						>
-							<Trans>上一頁</Trans>
-						</button>
-						{Array.from({ length: pageCount }, (_, index) => (
-							<button
-								key={index}
-								type="button"
-								aria-label={t`第 ${index + 1} 頁`}
-								aria-current={index === safePage ? 'page' : undefined}
-								onClick={() => setPage(index)}
-								className={
-									index === safePage
-										? 'h-9 min-w-9 rounded-[6px] bg-[#141414] px-2 text-sm text-white tabular-nums'
-										: 'h-9 min-w-9 px-2 text-sm tabular-nums hover:underline'
-								}
-							>
-								{index + 1}
-							</button>
-						))}
-						<button
-							type="button"
-							disabled={safePage >= pageCount - 1}
-							onClick={() => setPage(safePage + 1)}
-							className="h-9 px-3 text-sm disabled:text-[#6b6b6b]"
-						>
-							<Trans>下一頁</Trans>
-						</button>
-					</nav>
-				)}
-			</section>
+											{index + 1}
+										</Button>
+									</PaginationItem>
+								))}
+								<PaginationItem>
+									<Button
+										variant="ghost"
+										size="sm"
+										disabled={safePage >= pageCount - 1}
+										onClick={() => setPage(safePage + 1)}
+									>
+										<Trans>下一頁</Trans>
+									</Button>
+								</PaginationItem>
+							</PaginationContent>
+						</Pagination>
+					)}
+				</CardContent>
+			</Card>
 		</div>
 	);
 }
@@ -239,9 +255,9 @@ function BuyAmount({
 	};
 
 	return (
-		<label className="mt-1 flex items-center gap-1.5 text-xs text-[#6b6b6b]">
+		<label className="text-muted-foreground mt-1 flex items-center gap-1.5 text-xs">
 			<Trans>補</Trans>
-			<input
+			<Input
 				type="number"
 				inputMode="numeric"
 				min={1}
@@ -257,7 +273,7 @@ function BuyAmount({
 						event.currentTarget.blur();
 					}
 				}}
-				className="h-8 w-14 rounded-[6px] border border-[#d4d4d4] bg-white px-2 text-right text-sm text-[#0a0a0a] tabular-nums"
+				className="h-8 w-14 px-2 text-right tabular-nums"
 			/>
 			{item.unit ? t(UNIT_LABELS[item.unit]) : null}
 		</label>
@@ -358,68 +374,77 @@ function ShortfallPurchase({
 	};
 
 	return (
-		<section className="rounded-[8px] border border-[#e6e6e6] bg-white p-4">
-			<h2 className="text-base font-medium">
-				<Trans>低於安全警戒</Trans>
-			</h2>
-			{short.length === 0 ? (
-				<p className="mt-3 text-sm text-[#6b6b6b]">{t`沒有低於安全警戒的物資。`}</p>
-			) : (
-				<form onSubmit={(event) => void submit(event)} className="mt-4 grid gap-4">
-					<ul>
-						{short.map((item) => (
-							<li key={item._id} className="flex min-h-11 items-center justify-between gap-3">
-								<span className="truncate text-sm">{item.name}</span>
-								{linked.has(item._id) ? (
-									<span className="text-xs text-[#6b6b6b]">
-										<Trans>已在清單</Trans>
-									</span>
-								) : (
-									<label className="flex shrink-0 items-center gap-1.5 text-xs text-[#6b6b6b]">
-										<Trans>補</Trans>
-										<input
-											type="number"
-											inputMode="numeric"
-											min={0}
-											max={99}
-											step={1}
-											required
-											aria-label={t`補 ${item.name}`}
-											value={amounts[item._id] ?? String(item.buy)}
-											onChange={(event) => {
-												const value = event.target.value;
-												setAmounts((current) => ({ ...current, [item._id]: value }));
-											}}
-											className="h-8 w-14 rounded-[6px] border border-[#d4d4d4] bg-white px-2 text-right text-sm text-[#0a0a0a] tabular-nums"
-										/>
-										{t(UNIT_LABELS[item.unit])}
-									</label>
-								)}
-							</li>
-						))}
-					</ul>
-					{missing.length > 0 && (
-						<div className="flex flex-wrap items-end justify-between gap-3">
-							<label className="grid gap-2 text-sm">
-								<Trans>總計 HK$</Trans>
-								<input
-									name="total"
-									required
-									inputMode="decimal"
-									className="h-10 w-28 rounded-[6px] border border-[#d4d4d4] bg-white px-3 tabular-nums"
-								/>
-							</label>
-							<button
-								type="submit"
-								disabled={pending}
-								className="h-9 rounded-[6px] bg-[#141414] px-3 text-sm text-white disabled:opacity-50"
-							>
-								<Trans>建立採購記錄</Trans>
-							</button>
-						</div>
-					)}
-				</form>
-			)}
-		</section>
+		<Card>
+			<CardHeader>
+				<CardTitle>
+					<h2>
+						<Trans>低於安全警戒</Trans>
+					</h2>
+				</CardTitle>
+			</CardHeader>
+			<CardContent>
+				{short.length === 0 ? (
+					<Empty>
+						<EmptyHeader>
+							<EmptyDescription>{t`沒有低於安全警戒的物資。`}</EmptyDescription>
+						</EmptyHeader>
+					</Empty>
+				) : (
+					<form onSubmit={(event) => void submit(event)} className="flex flex-col gap-4">
+						<ul>
+							{short.map((item) => (
+								<li key={item._id} className="flex min-h-11 items-center justify-between gap-3">
+									<span className="truncate text-sm">{item.name}</span>
+									{linked.has(item._id) ? (
+										<Badge variant="secondary">
+											<Trans>已在清單</Trans>
+										</Badge>
+									) : (
+										<label className="text-muted-foreground flex shrink-0 items-center gap-1.5 text-xs">
+											<Trans>補</Trans>
+											<Input
+												type="number"
+												inputMode="numeric"
+												min={0}
+												max={99}
+												step={1}
+												required
+												aria-label={t`補 ${item.name}`}
+												value={amounts[item._id] ?? String(item.buy)}
+												onChange={(event) => {
+													const value = event.target.value;
+													setAmounts((current) => ({ ...current, [item._id]: value }));
+												}}
+												className="h-8 w-14 px-2 text-right tabular-nums"
+											/>
+											{t(UNIT_LABELS[item.unit])}
+										</label>
+									)}
+								</li>
+							))}
+						</ul>
+						{missing.length > 0 && (
+							<div className="flex flex-wrap items-end justify-between gap-3">
+								<Field className="w-28">
+									<FieldLabel htmlFor="purchase-total">
+										<Trans>總計 HK$</Trans>
+									</FieldLabel>
+									<Input
+										id="purchase-total"
+										name="total"
+										required
+										inputMode="decimal"
+										className="tabular-nums"
+									/>
+								</Field>
+								<Button type="submit" disabled={pending}>
+									<Trans>建立採購記錄</Trans>
+								</Button>
+							</div>
+						)}
+					</form>
+				)}
+			</CardContent>
+		</Card>
 	);
 }

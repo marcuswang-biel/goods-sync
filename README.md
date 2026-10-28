@@ -11,7 +11,7 @@ Monorepo starter for BIEL projects: a Convex backend, a Vite + React web app and
 | `packages/backend/` | Convex functions, schema, auth, migrations (`@convex-dev/migrations`)      |
 | `packages/domain/`  | Business rules as Effect programs (no Convex imports)                      |
 | `packages/shared/`  | Error codes and helpers used by backend and clients                        |
-| `packages/web-ui/`  | Radix + Tailwind primitives (Button, Card, Input, Label)                   |
+| `apps/web/src/components/ui/` | shadcn/ui components (Base UI + Tailwind)                         |
 | `packages/config/`  | Shared `tsconfig.base.json`                                                |
 
 Tooling: pnpm workspaces + catalog, Turborepo, oxlint (type-aware, with local `anti-slop` and Lingui rules) and oxfmt, vitest, convex-test, `@effect/vitest`, Release Please.

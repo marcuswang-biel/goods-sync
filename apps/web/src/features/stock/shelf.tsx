@@ -7,8 +7,32 @@ import { convexErrorCode } from '@goods/shared/convex-error';
 import { isAppErrorCode } from '@goods/shared/error-codes';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { useQuery } from '@tanstack/react-query';
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, type ReactNode } from 'react';
 
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Empty, EmptyDescription, EmptyHeader } from '@/components/ui/empty';
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from '@/components/ui/table';
 import { REJECTION_MESSAGES, STOCK_ERROR_MESSAGES } from '@/features/stock/errors';
 import { CATEGORY_LABELS, SHELF_LABELS, UNIT_LABELS } from '@/features/stock/labels';
 import { LevelBar, StockAmount } from '@/features/stock/level-bar';
@@ -83,139 +107,147 @@ export function ShelfTable({
 	};
 
 	return (
-		<div className="mx-auto w-full max-w-[1128px] px-4 py-6 lg:px-0">
-			<div className="mb-3 flex items-baseline justify-between gap-3">
-				<h1 className="text-[24px] leading-none font-medium">
+		<div className="mx-auto flex w-full max-w-[1128px] flex-col gap-3 px-4 py-6 lg:px-0">
+			<div className="flex items-baseline justify-between gap-3">
+				<h1 className="text-2xl leading-none font-medium">
 					<Trans>貨架</Trans>
 				</h1>
-				<p className="text-sm text-[#6b6b6b] tabular-nums">
+				<p className="text-muted-foreground text-sm tabular-nums">
 					<Trans>{items.length} 樣</Trans>
 				</p>
 			</div>
 			<AddItem spaceId={spaceId} onError={setError} />
 			{error && (
-				<p id="shelf-error" role="alert" className="mb-3 text-sm text-[#831c1e]">
-					{error}
-				</p>
+				<Alert variant="destructive">
+					<AlertDescription>{error}</AlertDescription>
+				</Alert>
 			)}
-			<form className="mb-3" onSubmit={(event) => event.preventDefault()}>
-				<label className="grid max-w-sm gap-2 text-sm">
-					<Trans>搜尋物資</Trans>
-					<input
+			<form onSubmit={(event) => event.preventDefault()}>
+				<Field className="max-w-sm">
+					<FieldLabel htmlFor="shelf-search">
+						<Trans>搜尋物資</Trans>
+					</FieldLabel>
+					<Input
+						id="shelf-search"
 						type="search"
 						value={query}
 						onChange={(event) => {
 							onSearch(event.target.value);
 						}}
-						className={fieldClass}
 					/>
-				</label>
+				</Field>
 			</form>
 			{board.isPending ? (
-				<p className="text-sm">{t`正在讀這個空間的貨架。`}</p>
+				<div aria-busy="true" className="flex flex-col gap-2">
+					<Skeleton className="h-4 w-48" />
+					<span className="sr-only">{t`正在讀這個空間的貨架。`}</span>
+				</div>
 			) : items.length === 0 ? (
-				<p className="text-sm text-[#6b6b6b]">{t`沒有符合的物資。`}</p>
+				<Empty>
+					<EmptyHeader>
+						<EmptyDescription>{t`沒有符合的物資。`}</EmptyDescription>
+					</EmptyHeader>
+				</Empty>
 			) : (
-				<div className="overflow-hidden rounded-[8px] border border-[#e6e6e6] bg-white">
-					<table className="hidden w-full text-sm md:table">
-						<thead>
-							<tr className="text-left text-xs text-[#6b6b6b]">
-								<th className="px-4 py-2 font-normal">
+				<>
+					<Table className="hidden md:table">
+						<TableHeader>
+							<TableRow>
+								<TableHead>
 									<Trans>物資</Trans>
-								</th>
-								<th className="px-4 py-2 font-normal">
+								</TableHead>
+								<TableHead>
 									<Trans>貨架位置</Trans>
-								</th>
-								<th className="px-4 py-2 font-normal">
+								</TableHead>
+								<TableHead>
 									<Trans>在架上</Trans>
-								</th>
-								<th className="px-4 py-2 text-right font-normal">
+								</TableHead>
+								<TableHead className="text-right">
 									<Trans>安全</Trans>
-								</th>
-								<th className="px-4 py-2 text-right font-normal">
+								</TableHead>
+								<TableHead className="text-right">
 									<Trans>到期</Trans>
-								</th>
-								<th className="px-4 py-2 font-normal">
+								</TableHead>
+								<TableHead>
 									<span className="sr-only">
 										<Trans>領用或刪除</Trans>
 									</span>
-								</th>
-							</tr>
-						</thead>
-						<tbody>
+								</TableHead>
+							</TableRow>
+						</TableHeader>
+						<TableBody>
 							{items.map((item) => (
-								<tr key={item._id} className="border-t border-[#f0f0f0]">
-									<td className="px-4 py-2">
-										{item.name}
-										{isExpiring(item.freshness) && (
-											<span className="ml-2 text-xs text-[#1d5fbf]">
-												<Trans>即將過期</Trans>
-											</span>
-										)}
-										{!isExpiring(item.freshness) && isShort(item.supply) && (
-											<span className="ml-2 text-xs text-[#1d5fbf]">
-												<Trans>不夠了</Trans>
-											</span>
-										)}
-									</td>
-									<td className="px-4 py-2 text-[#6b6b6b]">{t(SHELF_LABELS[item.shelf])}</td>
-									<td className="px-4 py-2">
+								<TableRow key={item._id}>
+									<TableCell>
+										<span className="inline-flex items-center gap-2">
+											{item.name}
+											{isExpiring(item.freshness) && (
+												<Badge variant="outline">
+													<Trans>即將過期</Trans>
+												</Badge>
+											)}
+											{!isExpiring(item.freshness) && isShort(item.supply) && (
+												<Badge variant="outline">
+													<Trans>不夠了</Trans>
+												</Badge>
+											)}
+										</span>
+									</TableCell>
+									<TableCell className="text-muted-foreground">
+										{t(SHELF_LABELS[item.shelf])}
+									</TableCell>
+									<TableCell>
 										<span className="flex w-full items-center justify-start gap-3">
 											<LevelBar quantity={item.quantity} safetyQuantity={item.safetyQuantity} />
 											<StockAmount
 												quantity={item.quantity}
 												unit={t(UNIT_LABELS[item.unit])}
 												safetyQuantity={item.safetyQuantity}
-												className={
-													item.quantity === 0
-														? 'text-[#6b6b6b]'
-														: isAttentionish(item)
-															? 'text-[#1d5fbf]'
-															: ''
-												}
 											/>
 										</span>
-									</td>
-									<td className="px-4 py-2 text-right text-[#6b6b6b] tabular-nums">
+									</TableCell>
+									<TableCell className="text-muted-foreground text-right tabular-nums">
 										{item.safetyQuantity}
-									</td>
-									<td className="px-4 py-2 text-right text-[#6b6b6b] tabular-nums">
+									</TableCell>
+									<TableCell className="text-muted-foreground text-right tabular-nums">
 										{item.expiresOn ?? '—'}
-									</td>
-									<td className="px-4 py-2 text-right">
-										{item.quantity > 0 && (
-											<button
-												type="button"
-												className="h-9 text-sm hover:underline disabled:opacity-50"
+									</TableCell>
+									<TableCell className="text-right">
+										<div className="flex items-center justify-end gap-1">
+											{item.quantity > 0 && (
+												<Button
+													variant="ghost"
+													size="sm"
+													disabled={removingBusy}
+													onClick={() => void take(item._id, item.version)}
+												>
+													<Trans>領用</Trans>
+												</Button>
+											)}
+											<Button
+												variant="destructive"
+												size="sm"
 												disabled={removingBusy}
-												onClick={() => void take(item._id, item.version)}
+												aria-label={t`刪除 ${item.name}`}
+												onClick={() => setRemoving({ id: item._id, name: item.name })}
 											>
-												<Trans>領用</Trans>
-											</button>
-										)}
-										<button
-											type="button"
-											className="ml-3 h-9 text-sm text-[#831c1e] hover:underline disabled:opacity-50"
-											disabled={removingBusy}
-											aria-label={t`刪除 ${item.name}`}
-											onClick={() => setRemoving({ id: item._id, name: item.name })}
-										>
-											<Trans>刪除</Trans>
-										</button>
-									</td>
-								</tr>
+												<Trans>刪除</Trans>
+											</Button>
+										</div>
+									</TableCell>
+								</TableRow>
 							))}
-						</tbody>
-					</table>
-					<ul className="md:hidden">
+						</TableBody>
+					</Table>
+					<ul className="bg-card ring-foreground/10 flex flex-col rounded-xl ring-1 md:hidden">
 						{items.map((item) => (
 							<li
 								key={item._id}
-								className="flex min-h-11 items-center gap-3 border-t border-[#f0f0f0] px-4 py-2 first:border-t-0"
+								className="flex min-h-11 items-center gap-3 border-b px-4 py-2 last:border-b-0"
 							>
 								<div className="min-w-0">
 									<p className="truncate text-sm">{item.name}</p>
-									<p className="text-xs text-[#6b6b6b]">
+									<p className="text-muted-foreground text-xs">
 										{t(SHELF_LABELS[item.shelf])} · {item.expiresOn ?? '—'}
 									</p>
 								</div>
@@ -231,29 +263,29 @@ export function ShelfTable({
 										safetyQuantity={item.safetyQuantity}
 									/>
 									{item.quantity > 0 && (
-										<button
-											type="button"
-											className="h-11 text-sm disabled:opacity-50"
+										<Button
+											variant="ghost"
+											size="sm"
 											disabled={removingBusy}
 											onClick={() => void take(item._id, item.version)}
 										>
 											<Trans>領用</Trans>
-										</button>
+										</Button>
 									)}
-									<button
-										type="button"
-										className="h-11 text-sm text-[#831c1e] disabled:opacity-50"
+									<Button
+										variant="destructive"
+										size="sm"
 										disabled={removingBusy}
 										aria-label={t`刪除 ${item.name}`}
 										onClick={() => setRemoving({ id: item._id, name: item.name })}
 									>
 										<Trans>刪除</Trans>
-									</button>
+									</Button>
 								</div>
 							</li>
 						))}
 					</ul>
-				</div>
+				</>
 			)}
 			<ConfirmRemove
 				name={removing?.name ?? null}
@@ -264,9 +296,6 @@ export function ShelfTable({
 		</div>
 	);
 }
-
-/** Shared outline for the shelf form controls. */
-const fieldClass = 'h-10 rounded-[6px] border border-[#d4d4d4] bg-white px-3';
 
 /** English category codes stored on an item. The label is translated in the form. */
 const categoryCodes = [
@@ -288,21 +317,6 @@ const categoryCodes = [
 const unitCodes = ['carton', 'slab', 'bag', 'roll', 'bottle', 'ream', 'can', 'piece'] as const;
 /** English shelf codes stored on an item. */
 const shelfCodes = ['fridge', 'tearoom', 'washroom', 'sink', 'cupboard', 'printroom'] as const;
-
-/** True when the form posted a known category code. */
-function isCategory(value: string): value is (typeof categoryCodes)[number] {
-	return categoryCodes.some((code) => code === value);
-}
-
-/** True when the form posted a known unit code. */
-function isUnit(value: string): value is (typeof unitCodes)[number] {
-	return unitCodes.some((code) => code === value);
-}
-
-/** True when the form posted a known shelf code. */
-function isShelf(value: string): value is (typeof shelfCodes)[number] {
-	return shelfCodes.some((code) => code === value);
-}
 
 /** Form that places a new good on the shelf. The heading is the only "add" label. */
 function AddItem({
@@ -353,113 +367,144 @@ function AddItem({
 	};
 
 	return (
-		<section id="add-item" className="mb-4 rounded-[8px] border border-[#e6e6e6] bg-white p-4">
-			<h2 className="text-base font-medium">
-				<Trans>增加新物資</Trans>
-			</h2>
-			<form onSubmit={(event) => void submit(event)} className="mt-4 grid gap-4 md:grid-cols-4">
-				<label className="grid gap-2 text-sm md:col-span-2">
-					<Trans>名稱</Trans>
-					<input
-						value={name}
-						onChange={(event) => setName(event.target.value)}
-						required
-						className={fieldClass}
-					/>
-				</label>
-				<label className="grid gap-2 text-sm">
-					<Trans>種類</Trans>
-					<select
-						value={category}
-						onChange={(event) => {
-							const next = event.target.value;
-							if (isCategory(next)) setCategory(next);
-						}}
-						className={fieldClass}
-					>
-						{categoryCodes.map((code) => (
-							<option key={code} value={code}>
-								{t(CATEGORY_LABELS[code])}
-							</option>
-						))}
-					</select>
-				</label>
-				<label className="grid gap-2 text-sm">
-					<Trans>規格</Trans>
-					<select
-						value={unit}
-						onChange={(event) => {
-							const next = event.target.value;
-							if (isUnit(next)) setUnit(next);
-						}}
-						className={fieldClass}
-					>
-						{unitCodes.map((code) => (
-							<option key={code} value={code}>
-								{t(UNIT_LABELS[code])}
-							</option>
-						))}
-					</select>
-				</label>
-				<label className="grid gap-2 text-sm">
-					<Trans>數量</Trans>
-					<input
-						value={quantity}
-						onChange={(event) => setQuantity(event.target.value)}
-						inputMode="numeric"
-						className={`${fieldClass} tabular-nums`}
-					/>
-				</label>
-				<label className="grid gap-2 text-sm">
-					<Trans>安全警戒</Trans>
-					<input
-						value={safety}
-						onChange={(event) => setSafety(event.target.value)}
-						inputMode="numeric"
-						className={`${fieldClass} tabular-nums`}
-					/>
-				</label>
-				<label className="grid gap-2 text-sm">
-					<Trans>到期</Trans>
-					<input
-						type="date"
-						value={expiresOn}
-						onChange={(event) => setExpiresOn(event.target.value)}
-						className={fieldClass}
-					/>
-				</label>
-				<label className="grid gap-2 text-sm">
-					<Trans>貨架位置</Trans>
-					<select
-						value={shelf}
-						onChange={(event) => {
-							const next = event.target.value;
-							if (isShelf(next)) setShelf(next);
-						}}
-						className={fieldClass}
-					>
-						{shelfCodes.map((code) => (
-							<option key={code} value={code}>
-								{t(SHELF_LABELS[code])}
-							</option>
-						))}
-					</select>
-				</label>
-				<div className="md:self-end">
-					<button type="submit" className="h-9 rounded-[6px] bg-[#141414] px-3 text-sm text-white">
-						<Trans>放上貨架</Trans>
-					</button>
-				</div>
-			</form>
-		</section>
+		<Card>
+			<CardHeader>
+				<CardTitle>
+					<h2>
+						<Trans>增加新物資</Trans>
+					</h2>
+				</CardTitle>
+			</CardHeader>
+			<CardContent>
+				<form onSubmit={(event) => void submit(event)}>
+					<FieldGroup>
+						<div className="grid gap-5 md:grid-cols-4">
+							<Field className="md:col-span-2">
+								<FieldLabel htmlFor="item-name">
+									<Trans>名稱</Trans>
+								</FieldLabel>
+								<Input
+									id="item-name"
+									value={name}
+									onChange={(event) => setName(event.target.value)}
+									required
+								/>
+							</Field>
+							<CodeSelect
+								id="item-category"
+								label={<Trans>種類</Trans>}
+								value={category}
+								codes={categoryCodes}
+								labelOf={(code) => t(CATEGORY_LABELS[code])}
+								onValueChange={setCategory}
+							/>
+							<CodeSelect
+								id="item-unit"
+								label={<Trans>規格</Trans>}
+								value={unit}
+								codes={unitCodes}
+								labelOf={(code) => t(UNIT_LABELS[code])}
+								onValueChange={setUnit}
+							/>
+							<Field>
+								<FieldLabel htmlFor="item-quantity">
+									<Trans>數量</Trans>
+								</FieldLabel>
+								<Input
+									id="item-quantity"
+									value={quantity}
+									onChange={(event) => setQuantity(event.target.value)}
+									inputMode="numeric"
+									className="tabular-nums"
+								/>
+							</Field>
+							<Field>
+								<FieldLabel htmlFor="item-safety">
+									<Trans>安全警戒</Trans>
+								</FieldLabel>
+								<Input
+									id="item-safety"
+									value={safety}
+									onChange={(event) => setSafety(event.target.value)}
+									inputMode="numeric"
+									className="tabular-nums"
+								/>
+							</Field>
+							<Field>
+								<FieldLabel htmlFor="item-expires">
+									<Trans>到期</Trans>
+								</FieldLabel>
+								<Input
+									id="item-expires"
+									type="date"
+									value={expiresOn}
+									onChange={(event) => setExpiresOn(event.target.value)}
+								/>
+							</Field>
+							<CodeSelect
+								id="item-shelf"
+								label={<Trans>貨架位置</Trans>}
+								value={shelf}
+								codes={shelfCodes}
+								labelOf={(code) => t(SHELF_LABELS[code])}
+								onValueChange={setShelf}
+							/>
+							<div className="md:self-end">
+								<Button type="submit">
+									<Trans>放上貨架</Trans>
+								</Button>
+							</div>
+						</div>
+					</FieldGroup>
+				</form>
+			</CardContent>
+		</Card>
 	);
 }
 
-/** True when a stocked item is expiring or under its safety line. Empty shelves are not badged. */
-function isAttentionish(item: {
-	freshness: 'undated' | 'ok' | 'soon' | 'expired';
-	supply: 'ok' | 'low' | 'out';
-	quantity: number;
-}): boolean {
-	return item.quantity > 0 && (isExpiring(item.freshness) || isShort(item.supply));
+/** A labeled select whose value is one of a fixed English code list. */
+function CodeSelect<Code extends string>({
+	id,
+	label,
+	value,
+	codes,
+	labelOf,
+	onValueChange,
+}: {
+	id: string;
+	label: ReactNode;
+	value: Code;
+	codes: readonly Code[];
+	labelOf: (code: Code) => string;
+	onValueChange: (code: Code) => void;
+}) {
+	return (
+		<Field>
+			<FieldLabel htmlFor={id}>{label}</FieldLabel>
+			<Select
+				value={value}
+				onValueChange={(next) => {
+					if (next !== null && codes.some((code) => code === next)) onValueChange(next);
+				}}
+			>
+				<SelectTrigger id={id} className="w-full">
+					<SelectValue>
+						{(selected) => {
+							const match = codes.find((code) => code === selected);
+							return match === undefined ? null : labelOf(match);
+						}}
+					</SelectValue>
+				</SelectTrigger>
+				<SelectContent>
+					<SelectGroup>
+						{codes.map((code) => (
+							<SelectItem key={code} value={code}>
+								{labelOf(code)}
+							</SelectItem>
+						))}
+					</SelectGroup>
+				</SelectContent>
+			</Select>
+		</Field>
+	);
 }
