@@ -7,8 +7,9 @@
 export const APP_ERROR_CODES = {
 	unauthenticated: 'UNAUTHENTICATED',
 	notFound: 'NOT_FOUND',
-	claimInvalid: 'CLAIM_INVALID',
-	claimMonthlyQuotaExceeded: 'CLAIM_MONTHLY_QUOTA_EXCEEDED',
+	stockInvalid: 'STOCK_INVALID',
+	purchaseInvalid: 'PURCHASE_INVALID',
+	budgetExceeded: 'BUDGET_EXCEEDED',
 } as const;
 
 export type AppErrorCode = (typeof APP_ERROR_CODES)[keyof typeof APP_ERROR_CODES];

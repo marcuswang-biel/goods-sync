@@ -7,7 +7,7 @@ import { convex } from '@/lib/convex';
 export default function RootLayout() {
 	return (
 		<AuthProvider client={convex}>
-			<Stack screenOptions={{ headerTitle: 'Acme' }} />
+			<Stack screenOptions={{ headerTitle: '物資' }} />
 			<StatusBar style="auto" />
 		</AuthProvider>
 	);

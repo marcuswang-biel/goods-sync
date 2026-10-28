@@ -1,8 +1,9 @@
 import { useConvexAuth } from 'convex/react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { Link } from 'expo-router';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { SignInScreen } from '@/auth';
-import { ClaimsList } from '@/components/claims-list';
+import { PantryHome } from '@/components/pantry-home';
 
 export default function HomeScreen() {
 	const { isAuthenticated, isLoading } = useConvexAuth();
@@ -14,9 +15,26 @@ export default function HomeScreen() {
 			</View>
 		);
 	}
-	return isAuthenticated ? <ClaimsList /> : <SignInScreen />;
+	if (!isAuthenticated) return <SignInScreen />;
+	return (
+		<View style={styles.page}>
+			<PantryHome />
+			<Link href="/purchases" style={styles.tab}>
+				<Text style={styles.tabLabel}>採購</Text>
+			</Link>
+		</View>
+	);
 }
 
 const styles = StyleSheet.create({
+	page: { flex: 1, backgroundColor: '#f2f4f7' },
 	center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+	tab: {
+		minHeight: 48,
+		alignItems: 'center',
+		justifyContent: 'center',
+		borderTopWidth: 1,
+		borderTopColor: '#e6e6e6',
+	},
+	tabLabel: { fontSize: 14, color: '#0a0a0a' },
 });

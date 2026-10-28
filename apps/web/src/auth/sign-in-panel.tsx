@@ -1,4 +1,4 @@
-import { Button, Input, Label } from '@acme/web-ui';
+import { Button, Input, Label } from '@goods/web-ui';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { useState, type FormEvent } from 'react';
 
@@ -53,7 +53,7 @@ export function SignInPanel() {
 					id="sign-in-email"
 					type="email"
 					autoComplete="username email"
-					placeholder="dev@example.com"
+					placeholder={'dev@example.com' /* taste-skill-ignore: seeded local account */}
 					value={email}
 					onChange={(event) => setEmail(event.target.value)}
 					required

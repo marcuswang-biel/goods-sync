@@ -1,4 +1,4 @@
-# Acme
+# 物資
 
 Monorepo starter for BIEL projects: a Convex backend, a Vite + React web app and an Expo app sharing one auth provider, with business rules in Effect.
 
@@ -47,7 +47,7 @@ Native: `pnpm dev:native`, then open the app in a simulator or development build
 ## Start a new project from this template
 
 1. On GitHub, **Use this template** → create the repo, then clone it.
-2. Rename the placeholder identity (`acme` / `Acme`) everywhere, on a clean tree:
+2. Rename the placeholder identity (`goods` / `物資`) everywhere, on a clean tree:
 
    ```bash
    node scripts/rename.mjs billing "Billing Portal"
@@ -55,9 +55,9 @@ Native: `pnpm dev:native`, then open the app in a simulator or development build
    pnpm check
    ```
 
-   This rewrites the npm scope (`@acme/*` → `@billing/*`), the Expo slug, scheme and bundle id (`com.acme.app` → `com.billing.app`), storage keys and display names. Review `git diff` before committing.
+   This rewrites the npm scope (`@goods/*` → `@billing/*`), the Expo slug, scheme and bundle id (`com.goods.app` → `com.billing.app`), storage keys and display names. Review `git diff` before committing.
 
-3. Replace the example domain: `packages/domain/src/claims`, `packages/backend/convex/claims.ts`, the `claims` table in `convex/schema.ts`, and the claims pages. Keep the pattern (ADR 0001).
+3. The domain is shared-space stock: `packages/domain/src/stock`, `packages/backend/convex/{stock,spaces,purchases}.ts`, and the board in `apps/web` and `apps/native`. Keep the pattern (ADR 0001).
 4. Fill in `CONTEXT.md`.
 5. Production setup (not done by the template): a Convex project and `CONVEX_DEPLOY_KEY`, Vercel project secrets (`VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`), `EXPO_TOKEN` and an EAS project for native, and the auth provider config in `docs/auth.md`.
 

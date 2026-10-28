@@ -1,5 +1,5 @@
 {
-	"name": "@acme/native",
+	"name": "@goods/native",
 	"version": "0.1.0",
 	"private": true,
 	"main": "expo-router/entry",
@@ -17,15 +17,18 @@
 		"lint": "pnpm --dir ../.. exec oxlint apps/native"
 	},
 	"dependencies": {
-		"@acme/backend": "workspace:*",
-		"@acme/shared": "workspace:*",
 		"@better-auth/core": "catalog:",
 		"@better-auth/expo": "catalog:",
 		"@convex-dev/better-auth": "catalog:",
 		"@expo/log-box": "~56.0.14",
 		"@expo/metro-runtime": "~56.0.21",
+		"@goods/backend": "workspace:*",
+		"@goods/domain": "workspace:*",
+		"@goods/shared": "workspace:*",
+		"@react-native-async-storage/async-storage": "^3.1.1",
 		"better-auth": "catalog:",
 		"convex": "catalog:",
+		"effect": "catalog:",
 		"expo": "~56.0.23",
 		"expo-constants": "~56.0.27",
 		"expo-linking": "~56.0.18",

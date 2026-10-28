@@ -1,7 +1,7 @@
 /**
  * Dev seed — idempotent.
  *
- * Ensures the dev user exists (and owns a couple of example claims) so a fresh
+ * Ensures the dev users exist (and own the demo flat and tea room) so a fresh
  * worktree can sign in immediately.
  *
  * Convex pattern (https://stack.convex.dev/seeding-data-for-preview-deployments):

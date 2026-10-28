@@ -1,1 +1,1 @@
-export * from './claims';
+export * from './stock';

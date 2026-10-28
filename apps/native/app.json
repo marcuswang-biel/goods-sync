@@ -1,17 +1,17 @@
 {
 	"expo": {
-		"name": "Acme",
-		"slug": "acme",
+		"name": "物資",
+		"slug": "goods",
 		"version": "0.1.0",
-		"scheme": "acme",
+		"scheme": "goods",
 		"orientation": "portrait",
 		"userInterfaceStyle": "automatic",
 		"ios": {
 			"supportsTablet": true,
-			"bundleIdentifier": "com.acme.app"
+			"bundleIdentifier": "com.goods.app"
 		},
 		"android": {
-			"package": "com.acme.app"
+			"package": "com.goods.app"
 		},
 		"plugins": ["expo-router", "expo-secure-store", "expo-web-browser"],
 		"experiments": {
