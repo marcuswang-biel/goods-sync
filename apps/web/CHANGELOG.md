@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/bielcrystal-labs/goods-sync/compare/web-v0.2.0...web-v0.2.1) (2026-10-28)
+
+
+### Bug Fixes
+
+* **web:** point Vercel at the Vite dist directory ([#3](https://github.com/bielcrystal-labs/goods-sync/issues/3)) ([a7e1b79](https://github.com/bielcrystal-labs/goods-sync/commit/a7e1b79f2e9821a916dc83c7f135dc3d6f64965b))
+
 ## [0.2.0](https://github.com/bielcrystal-labs/goods-sync/compare/web-v0.1.0...web-v0.2.0) (2026-10-28)
 
 
