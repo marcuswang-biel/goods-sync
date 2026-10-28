@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/marcuswang-biel/goods-sync/compare/web-v0.2.1...web-v0.2.2) (2026-10-28)
+
+
+### Bug Fixes
+
+* **web:** point production at the regional Convex URL ([#7](https://github.com/marcuswang-biel/goods-sync/issues/7)) ([a4b885c](https://github.com/marcuswang-biel/goods-sync/commit/a4b885cfe368133963ffe411c99c59e270746783))
+
 ## [0.2.1](https://github.com/bielcrystal-labs/goods-sync/compare/web-v0.2.0...web-v0.2.1) (2026-10-28)
 
 
