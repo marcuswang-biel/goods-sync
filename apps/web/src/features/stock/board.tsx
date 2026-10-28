@@ -85,7 +85,7 @@ export function Board({ spaceId }: { spaceId: Id<'spaces'> }) {
 		return (
 			<div aria-busy="true" className="px-4 py-8 lg:px-0">
 				<Skeleton className="h-4 w-48" />
-				<span className="sr-only">{t`正在讀這個空間的貨架。`}</span>
+				<span className="sr-only">{t`正在讀貨架。`}</span>
 			</div>
 		);
 	}
@@ -108,7 +108,9 @@ export function Board({ spaceId }: { spaceId: Id<'spaces'> }) {
 
 	return (
 		<div className="mx-auto flex w-full max-w-[1128px] flex-col gap-3 px-4 py-6 lg:px-0">
-			<h1 className="text-2xl leading-none font-medium">{board.data.space.name}</h1>
+			<h1 className="text-2xl leading-none font-medium">
+				<Trans>看板</Trans>
+			</h1>
 
 			{error && (
 				<Alert variant="destructive">
@@ -139,7 +141,7 @@ export function Board({ spaceId }: { spaceId: Id<'spaces'> }) {
 							<Empty>
 								<EmptyHeader>
 									<EmptyDescription>
-										<Trans>這個空間還沒有公共物資。</Trans>
+										<Trans>還沒有物資。</Trans>
 									</EmptyDescription>
 								</EmptyHeader>
 							</Empty>

@@ -5,22 +5,16 @@ import type { Id } from './_generated/dataModel';
 import { query } from './_generated/server';
 import { internalMutation } from './functions';
 import { requireUserId } from './lib/identity';
-import {
-	itemCategoryValidator,
-	itemUnitValidator,
-	shelfValidator,
-	spaceKindValidator,
-} from './schema';
+import { itemCategoryValidator, itemUnitValidator, shelfValidator } from './schema';
 
-/** A place the member can see, without its goods. */
+/** The shared shelf this account belongs to, without its goods. */
 const spaceSummary = v.object({
 	_id: v.id('spaces'),
 	name: v.string(),
-	kind: spaceKindValidator,
 	createdAt: v.number(),
 });
 
-/** Spaces the signed-in user belongs to, oldest first. */
+/** Shelves the signed-in user belongs to, oldest first. */
 export const listMine = query({
 	args: {},
 	returns: v.array(spaceSummary),
@@ -37,7 +31,6 @@ export const listMine = query({
 			spaces.push({
 				_id: space._id,
 				name: space.name,
-				kind: space.kind,
 				createdAt: space.createdAt,
 			});
 		}
@@ -54,7 +47,7 @@ function isoOffset(days: number): string {
 		.slice(0, 10);
 }
 
-/** One demo good inserted with the tea room. */
+/** One demo good inserted with the shelf. */
 type SeedItem = {
 	readonly name: string;
 	readonly category: typeof itemCategoryValidator.type;
@@ -65,7 +58,7 @@ type SeedItem = {
 	readonly shelf: typeof shelfValidator.type;
 };
 
-/** Dev seed: one tea room, shared by the two demo accounts. */
+/** Dev seed: one shelf, shared by the two demo accounts. */
 export const seedDemo = internalMutation({
 	args: { devUserId: v.string(), roommateUserId: v.string() },
 	returns: v.number(),
@@ -78,8 +71,7 @@ export const seedDemo = internalMutation({
 
 		const now = Date.now();
 		const spaceId = await ctx.db.insert('spaces', {
-			name: '公司茶水間',
-			kind: 'office',
+			name: '貨架',
 			createdBy: args.devUserId,
 			createdAt: now,
 		});
@@ -97,7 +89,7 @@ export const seedDemo = internalMutation({
 			await ctx.db.insert('memberships', member);
 		}
 
-		const officeItems: readonly SeedItem[] = [
+		const seededItems: readonly SeedItem[] = [
 			{
 				name: '咖啡豆',
 				category: 'coffee',
@@ -155,14 +147,14 @@ export const seedDemo = internalMutation({
 				inserted.set(`${spaceId}:${item.name}`, id);
 			}
 		};
-		await writeItems(spaceId, officeItems);
+		await writeItems(spaceId, seededItems);
 
 		const coffee = inserted.get(`${spaceId}:咖啡豆`);
 		if (coffee === undefined) return 1;
 
 		const purchaseId = await ctx.db.insert('purchases', {
 			spaceId,
-			clientMutationId: 'seed-office',
+			clientMutationId: 'seed-shelf',
 			totalCents: 12_400,
 			status: 'open',
 			createdBy: args.devUserId,

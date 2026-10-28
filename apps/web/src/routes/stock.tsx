@@ -27,8 +27,8 @@ function StockPage() {
 	const navigate = Route.useNavigate();
 	const { active, isPending } = useActiveSpace();
 	const { t } = useLingui();
-	if (isPending) return <p className="px-4 py-8 text-sm">{t`正在讀你的空間。`}</p>;
-	if (!active) return <p className="px-4 py-8 text-sm">{t`你還沒有加入任何空間。`}</p>;
+	if (isPending) return <p className="px-4 py-8 text-sm">{t`正在讀貨架。`}</p>;
+	if (!active) return <p className="px-4 py-8 text-sm">{t`還沒有貨架。`}</p>;
 	return (
 		<ShelfTable
 			spaceId={active._id}

@@ -140,7 +140,7 @@ export function ShelfTable({
 			{board.isPending ? (
 				<div aria-busy="true" className="flex flex-col gap-2">
 					<Skeleton className="h-4 w-48" />
-					<span className="sr-only">{t`正在讀這個空間的貨架。`}</span>
+					<span className="sr-only">{t`正在讀貨架。`}</span>
 				</div>
 			) : items.length === 0 ? (
 				<Empty>

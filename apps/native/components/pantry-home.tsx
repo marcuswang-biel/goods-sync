@@ -93,7 +93,7 @@ export function PantryHome() {
 				</Pressable>
 			</View>
 			<Text style={styles.email}>{viewer?.email ?? ''}</Text>
-			<Text style={styles.title}>{active?.name ?? '空間'}</Text>
+			<Text style={styles.title}>貨架</Text>
 			<Text style={[styles.figure, attention === 0 && styles.muted]}>{attention}</Text>
 			<Text style={styles.caption}>要處理</Text>
 			{note && <Text style={styles.note}>{note}</Text>}

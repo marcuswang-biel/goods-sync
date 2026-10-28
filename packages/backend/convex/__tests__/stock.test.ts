@@ -25,17 +25,11 @@ async function codeOf(promise: Promise<unknown>) {
 /** Fixed day the stock tests classify against. */
 const today = '2026-10-28';
 
-/** Inserts a place and two members, and returns the ids the stock tests use. */
-async function shelf(
-	t: ReturnType<typeof convexTest>,
-	ownerId: string,
-	roommateId: string,
-	kind: 'household' | 'office',
-) {
+/** Inserts one shelf and its members, and returns the ids the stock tests use. */
+async function shelf(t: ReturnType<typeof convexTest>, ownerId: string, roommateId: string) {
 	return await t.run(async (ctx) => {
 		const spaceId = await ctx.db.insert('spaces', {
-			name: kind === 'office' ? '公司茶水間' : '我的合租房',
-			kind,
+			name: '貨架',
 			createdBy: ownerId,
 			createdAt: Date.now(),
 		});
@@ -76,11 +70,11 @@ describe('stock', () => {
 		expect(await codeOf(t.query(api.spaces.listMine, {}))).toBe(APP_ERROR_CODES.unauthenticated);
 	});
 
-	it('hides a space from someone who is not a member', async () => {
+	it('hides the shelf from someone who is not a member', async () => {
 		const t = convexTest(schema, modules);
 		const alice = await signIn(t, 'alice@example.com');
 		const bob = await signIn(t, 'bob@example.com');
-		const { spaceId } = await shelf(t, alice.userId, alice.userId, 'household');
+		const { spaceId } = await shelf(t, alice.userId, alice.userId);
 
 		expect(await codeOf(bob.as.query(api.stock.board, { spaceId, today }))).toBe(
 			APP_ERROR_CODES.notFound,
@@ -97,7 +91,7 @@ describe('stock', () => {
 		const t = convexTest(schema, modules);
 		const alice = await signIn(t, 'alice@example.com');
 		const bob = await signIn(t, 'bob@example.com');
-		const { spaceId, itemId } = await shelf(t, alice.userId, bob.userId, 'office');
+		const { spaceId, itemId } = await shelf(t, alice.userId, bob.userId);
 
 		const bobSync = await bob.as.mutation(api.stock.sync, {
 			spaceId,
@@ -150,7 +144,7 @@ describe('shelf', () => {
 	it('places a new good with its unit, safety line, and expiry', async () => {
 		const t = convexTest(schema, modules);
 		const alice = await signIn(t, 'alice@example.com');
-		const { spaceId } = await shelf(t, alice.userId, alice.userId, 'household');
+		const { spaceId } = await shelf(t, alice.userId, alice.userId);
 
 		await alice.as.mutation(api.stock.create, {
 			spaceId,
@@ -190,11 +184,11 @@ describe('shelf', () => {
 });
 
 describe('purchases', () => {
-	it('records one household total and restocks every good', async () => {
+	it('records one total and restocks every good', async () => {
 		const t = convexTest(schema, modules);
 		const alice = await signIn(t, 'alice@example.com');
 		const bob = await signIn(t, 'bob@example.com');
-		const { spaceId, itemId } = await shelf(t, alice.userId, bob.userId, 'household');
+		const { spaceId, itemId } = await shelf(t, alice.userId, bob.userId);
 		const tissueId = await t.run(async (ctx) =>
 			ctx.db.insert('items', {
 				spaceId,
@@ -270,10 +264,10 @@ describe('purchases', () => {
 		expect(board.items.find((item) => item._id === tissueId)?.quantity).toBe(4);
 	});
 
-	it('records an office total and restocks the shelf', async () => {
+	it('records a total and restocks the shelf', async () => {
 		const t = convexTest(schema, modules);
 		const alice = await signIn(t, 'alice@example.com');
-		const { spaceId, itemId } = await shelf(t, alice.userId, alice.userId, 'office');
+		const { spaceId, itemId } = await shelf(t, alice.userId, alice.userId);
 
 		await alice.as.mutation(api.purchases.sync, {
 			spaceId,
@@ -311,7 +305,7 @@ describe('purchases', () => {
 	it('folds open per-good lines into one purchase', async () => {
 		const t = convexTest(schema, modules);
 		const alice = await signIn(t, 'alice@example.com');
-		const { spaceId, itemId } = await shelf(t, alice.userId, alice.userId, 'household');
+		const { spaceId, itemId } = await shelf(t, alice.userId, alice.userId);
 		await t.run(async (ctx) => {
 			await ctx.db.insert('purchaseLines', {
 				spaceId,
@@ -359,7 +353,7 @@ describe('stock.remove', () => {
 		const t = convexTest(schema, modules);
 		const alice = await signIn(t, 'alice@example.com');
 		const stranger = await signIn(t, 'cara@example.com');
-		const { spaceId, itemId } = await shelf(t, alice.userId, alice.userId, 'household');
+		const { spaceId, itemId } = await shelf(t, alice.userId, alice.userId);
 		await t.run(async (ctx) => {
 			await ctx.db.insert('movements', {
 				spaceId,

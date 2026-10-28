@@ -1,12 +1,12 @@
 # 物資
 
-物資 is a shared-shelf board for people who keep food and supplies in one place: flatmates, a couple, or an office tea room. It shows what is about to expire, what is under the safety line, and a shopping list with one total per trip. A phone in front of the fridge can take one carton even when the shop has no signal; when the network returns, those takes merge with everyone else's by causal order and timestamp.
+物資 is one shared shelf. It shows what is about to expire, what is under the safety line, and a shopping list with one total per trip. A phone in front of the fridge can take one carton even when the shop has no signal; when the network returns, those takes merge with everyone else's by causal order and timestamp.
 
 ## Language
 
-**Space (空間)**:
-The one shared place the members keep stock in.
-_Avoid_: workspace, tenant, account
+**Shelf group**:
+The people who share this shelf. The database still stores that group so membership can be checked. It has no home, couple, or office kind, and the product does not show its name.
+_Avoid_: space, workspace, tenant, office, home
 
 **Member (成員)**:
 A signed-in user who can read and change one space. Stored as the auth token subject. The label is the name the shelf shows (凱, 阿澄).
@@ -28,7 +28,7 @@ Replaying every movement for one item from its opening quantity. Parents come fi
 _Avoid_: last write wins, conflict copy
 
 **Purchase (採購)**:
-One trip for the space: several goods and a single total. Checking it off adds each good's quantity to the shelf.
+One trip: several goods and a single total. Checking it off adds each good's quantity to the shelf.
 _Avoid_: cart, order, expense, per-item price
 
 **Offline queue (離線佇列)**:
@@ -36,7 +36,7 @@ Takes and purchase edits a phone keeps until it can sync. Each new take of the s
 
 ## Relationships
 
-- A space has many members, items, movements, and purchases.
+- One shelf group has many members, items, movements, and purchases.
 - An item's quantity is the fold of its movements from the opening quantity.
 - A purchase holds many goods and one total. Checking it off restocks each good.
 - Shelf rules live in `packages/domain/src/stock`. Purchase rules live in `packages/domain/src/purchase`. The phone queue lives in `packages/domain/src/offline`. Convex authorizes, reads, runs the rule, and writes.

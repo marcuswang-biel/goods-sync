@@ -2,7 +2,7 @@ import { convexQuery } from '@convex-dev/react-query';
 import { api } from '@goods/backend/convex/_generated/api';
 import { useQuery } from '@tanstack/react-query';
 
-/** The one place this account keeps stock in. */
+/** The shared shelf this account belongs to. */
 export function useActiveSpace(enabled = true) {
 	const spaces = useQuery({ ...convexQuery(api.spaces.listMine, {}), enabled });
 	const list = spaces.data ?? [];

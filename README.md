@@ -57,7 +57,7 @@ Native: `pnpm dev:native`, then open the app in a simulator or development build
 
    This rewrites the npm scope (`@goods/*` → `@billing/*`), the Expo slug, scheme and bundle id (`com.goods.app` → `com.billing.app`), storage keys and display names. Review `git diff` before committing.
 
-3. The domain is shared-space stock: `packages/domain/src/stock`, `packages/backend/convex/{stock,spaces,purchases}.ts`, and the board in `apps/web` and `apps/native`. Keep the pattern (ADR 0001).
+3. The domain is one shared shelf: `packages/domain/src/stock`, `packages/backend/convex/{stock,spaces,purchases}.ts`, and the board in `apps/web` and `apps/native`. Keep the pattern (ADR 0001). There is no home or office kind.
 4. Fill in `CONTEXT.md`.
 5. Production setup (not done by the template): a Convex project and `CONVEX_DEPLOY_KEY`, Vercel project secrets (`VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`), `EXPO_TOKEN` and an EAS project for native, and the auth provider config in `docs/auth.md`.
 
