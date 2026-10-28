@@ -17,7 +17,7 @@ function SignInPage() {
 	if (isAuthenticated) return <Navigate to="/" replace />;
 
 	return (
-		<div className="mx-auto flex min-h-full w-full max-w-[1128px] items-center px-4 py-10 lg:px-0">
+		<div className="flex min-h-full w-full items-center px-4 py-10">
 			<div className="w-full max-w-sm">
 				<h1 className="text-2xl leading-none font-medium">
 					<Trans>登入物資</Trans>

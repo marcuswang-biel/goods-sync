@@ -60,6 +60,7 @@ export function ShelfTable({
 	const items = (board.data?.items ?? []).filter((item) =>
 		needle.length === 0 ? true : item.name.toLowerCase().includes(needle),
 	);
+	const emptyMessage = needle.length === 0 ? t`還沒有物資。` : t`沒有符合的物資。`;
 
 	/** Records a one-unit take against the item's current version. */
 	const take = async (itemId: Id<'items'>, version: number) => {
@@ -107,7 +108,7 @@ export function ShelfTable({
 	};
 
 	return (
-		<div className="mx-auto flex w-full max-w-[1128px] flex-col gap-3 px-4 py-6 lg:px-0">
+		<div className="flex w-full flex-col gap-3 px-4 py-6">
 			<div className="flex items-baseline justify-between gap-3">
 				<h1 className="text-2xl leading-none font-medium">
 					<Trans>貨架</Trans>
@@ -142,12 +143,6 @@ export function ShelfTable({
 					<Skeleton className="h-4 w-48" />
 					<span className="sr-only">{t`正在讀貨架。`}</span>
 				</div>
-			) : items.length === 0 ? (
-				<Empty>
-					<EmptyHeader>
-						<EmptyDescription>{t`沒有符合的物資。`}</EmptyDescription>
-					</EmptyHeader>
-				</Empty>
 			) : (
 				<>
 					<Table className="hidden md:table">
@@ -176,115 +171,135 @@ export function ShelfTable({
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							{items.map((item) => (
-								<TableRow key={item._id}>
-									<TableCell>
-										<span className="inline-flex items-center gap-2">
-											{item.name}
-											{isExpiring(item.freshness) && (
-												<Badge variant="outline">
-													<Trans>即將過期</Trans>
-												</Badge>
-											)}
-											{!isExpiring(item.freshness) && isShort(item.supply) && (
-												<Badge variant="outline">
-													<Trans>不夠了</Trans>
-												</Badge>
-											)}
-										</span>
-									</TableCell>
-									<TableCell className="text-muted-foreground">
-										{t(SHELF_LABELS[item.shelf])}
-									</TableCell>
-									<TableCell>
-										<span className="flex w-full items-center justify-start gap-3">
-											<LevelBar quantity={item.quantity} safetyQuantity={item.safetyQuantity} />
-											<StockAmount
-												quantity={item.quantity}
-												unit={t(UNIT_LABELS[item.unit])}
-												safetyQuantity={item.safetyQuantity}
-											/>
-										</span>
-									</TableCell>
-									<TableCell className="text-muted-foreground text-right tabular-nums">
-										{item.safetyQuantity}
-									</TableCell>
-									<TableCell className="text-muted-foreground text-right tabular-nums">
-										{item.expiresOn ?? '—'}
-									</TableCell>
-									<TableCell className="text-right">
-										<div className="flex items-center justify-end gap-1">
-											{item.quantity > 0 && (
-												<Button
-													variant="ghost"
-													size="sm"
-													disabled={removingBusy}
-													onClick={() => void take(item._id, item.version)}
-												>
-													<Trans>領用</Trans>
-												</Button>
-											)}
-											<Button
-												variant="destructive"
-												size="sm"
-												disabled={removingBusy}
-												aria-label={t`刪除 ${item.name}`}
-												onClick={() => setRemoving({ id: item._id, name: item.name })}
-											>
-												<Trans>刪除</Trans>
-											</Button>
-										</div>
+							{items.length === 0 ? (
+								<TableRow>
+									<TableCell colSpan={6}>
+										<Empty>
+											<EmptyHeader>
+												<EmptyDescription>{emptyMessage}</EmptyDescription>
+											</EmptyHeader>
+										</Empty>
 									</TableCell>
 								</TableRow>
-							))}
+							) : (
+								items.map((item) => (
+									<TableRow key={item._id}>
+										<TableCell>
+											<span className="inline-flex items-center gap-2">
+												{item.name}
+												{isExpiring(item.freshness) && (
+													<Badge variant="outline">
+														<Trans>即將過期</Trans>
+													</Badge>
+												)}
+												{!isExpiring(item.freshness) && isShort(item.supply) && (
+													<Badge variant="outline">
+														<Trans>不夠了</Trans>
+													</Badge>
+												)}
+											</span>
+										</TableCell>
+										<TableCell className="text-muted-foreground">
+											{t(SHELF_LABELS[item.shelf])}
+										</TableCell>
+										<TableCell>
+											<span className="flex w-full items-center justify-start gap-3">
+												<LevelBar quantity={item.quantity} safetyQuantity={item.safetyQuantity} />
+												<StockAmount
+													quantity={item.quantity}
+													unit={t(UNIT_LABELS[item.unit])}
+													safetyQuantity={item.safetyQuantity}
+												/>
+											</span>
+										</TableCell>
+										<TableCell className="text-muted-foreground text-right tabular-nums">
+											{item.safetyQuantity}
+										</TableCell>
+										<TableCell className="text-muted-foreground text-right tabular-nums">
+											{item.expiresOn ?? '—'}
+										</TableCell>
+										<TableCell className="text-right">
+											<div className="flex items-center justify-end gap-1">
+												{item.quantity > 0 && (
+													<Button
+														variant="ghost"
+														size="sm"
+														disabled={removingBusy}
+														onClick={() => void take(item._id, item.version)}
+													>
+														<Trans>領用</Trans>
+													</Button>
+												)}
+												<Button
+													variant="destructive"
+													size="sm"
+													disabled={removingBusy}
+													aria-label={t`刪除 ${item.name}`}
+													onClick={() => setRemoving({ id: item._id, name: item.name })}
+												>
+													<Trans>刪除</Trans>
+												</Button>
+											</div>
+										</TableCell>
+									</TableRow>
+								))
+							)}
 						</TableBody>
 					</Table>
-					<ul className="bg-card ring-foreground/10 flex flex-col rounded-xl ring-1 md:hidden">
-						{items.map((item) => (
-							<li
-								key={item._id}
-								className="flex min-h-11 items-center gap-3 border-b px-4 py-2 last:border-b-0"
-							>
-								<div className="min-w-0">
-									<p className="truncate text-sm">{item.name}</p>
-									<p className="text-muted-foreground text-xs">
-										{t(SHELF_LABELS[item.shelf])} · {item.expiresOn ?? '—'}
-									</p>
-								</div>
-								<div className="flex items-center gap-3">
-									<LevelBar
-										quantity={item.quantity}
-										safetyQuantity={item.safetyQuantity}
-										className="w-16 shrink-0"
-									/>
-									<StockAmount
-										quantity={item.quantity}
-										unit={t(UNIT_LABELS[item.unit])}
-										safetyQuantity={item.safetyQuantity}
-									/>
-									{item.quantity > 0 && (
+					{items.length === 0 ? (
+						<Empty className="md:hidden">
+							<EmptyHeader>
+								<EmptyDescription>{emptyMessage}</EmptyDescription>
+							</EmptyHeader>
+						</Empty>
+					) : (
+						<ul className="bg-card ring-foreground/10 flex flex-col rounded-xl ring-1 md:hidden">
+							{items.map((item) => (
+								<li
+									key={item._id}
+									className="flex min-h-11 items-center gap-3 border-b px-4 py-2 last:border-b-0"
+								>
+									<div className="min-w-0">
+										<p className="truncate text-sm">{item.name}</p>
+										<p className="text-muted-foreground text-xs">
+											{t(SHELF_LABELS[item.shelf])} · {item.expiresOn ?? '—'}
+										</p>
+									</div>
+									<div className="flex items-center gap-3">
+										<LevelBar
+											quantity={item.quantity}
+											safetyQuantity={item.safetyQuantity}
+											className="w-16 shrink-0"
+										/>
+										<StockAmount
+											quantity={item.quantity}
+											unit={t(UNIT_LABELS[item.unit])}
+											safetyQuantity={item.safetyQuantity}
+										/>
+										{item.quantity > 0 && (
+											<Button
+												variant="ghost"
+												size="sm"
+												disabled={removingBusy}
+												onClick={() => void take(item._id, item.version)}
+											>
+												<Trans>領用</Trans>
+											</Button>
+										)}
 										<Button
-											variant="ghost"
+											variant="destructive"
 											size="sm"
 											disabled={removingBusy}
-											onClick={() => void take(item._id, item.version)}
+											aria-label={t`刪除 ${item.name}`}
+											onClick={() => setRemoving({ id: item._id, name: item.name })}
 										>
-											<Trans>領用</Trans>
+											<Trans>刪除</Trans>
 										</Button>
-									)}
-									<Button
-										variant="destructive"
-										size="sm"
-										disabled={removingBusy}
-										aria-label={t`刪除 ${item.name}`}
-										onClick={() => setRemoving({ id: item._id, name: item.name })}
-									>
-										<Trans>刪除</Trans>
-									</Button>
-								</div>
-							</li>
-						))}
-					</ul>
+									</div>
+								</li>
+							))}
+						</ul>
+					)}
 				</>
 			)}
 			<ConfirmRemove

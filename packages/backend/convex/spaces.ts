@@ -1,9 +1,10 @@
 import { v } from 'convex/values';
 
 import type { Id } from './_generated/dataModel';
+import type { MutationCtx } from './_generated/server';
 
 import { query } from './_generated/server';
-import { internalMutation } from './functions';
+import { internalMutation, mutation } from './functions';
 import { requireUserId } from './lib/identity';
 import { itemCategoryValidator, itemUnitValidator, shelfValidator } from './schema';
 
@@ -36,6 +37,50 @@ export const listMine = query({
 		}
 		spaces.sort((left, right) => left.createdAt - right.createdAt);
 		return spaces;
+	},
+});
+
+/** The name shown on a membership when the account has no display name. */
+function memberLabel(identity: { name?: string; email?: string }): string {
+	const name = identity.name?.trim();
+	if (name) return name;
+	const email = identity.email?.split('@')[0]?.trim();
+	if (email) return email;
+	return '成員';
+}
+
+/**
+ * Opens one empty shelf for an account that has none. A second call returns the
+ * shelf they already belong to, so signing in on two devices does not fork it.
+ */
+async function openShelf(ctx: MutationCtx, userId: string, label: string): Promise<Id<'spaces'>> {
+	const existing = await ctx.db
+		.query('memberships')
+		.withIndex('by_user', (q) => q.eq('userId', userId))
+		.first();
+	if (existing) return existing.spaceId;
+	const spaceId = await ctx.db.insert('spaces', {
+		name: '貨架',
+		createdBy: userId,
+		createdAt: Date.now(),
+	});
+	await ctx.db.insert('memberships', {
+		spaceId,
+		userId,
+		role: 'admin',
+		label,
+	});
+	return spaceId;
+}
+
+/** Gives the signed-in account their shelf. New accounts start with an empty one. */
+export const ensureMine = mutation({
+	args: {},
+	returns: v.id('spaces'),
+	handler: async (ctx) => {
+		const identity = await ctx.auth.getUserIdentity();
+		const userId = await requireUserId(ctx);
+		return await openShelf(ctx, userId, memberLabel(identity ?? {}));
 	},
 });
 
