@@ -14,7 +14,7 @@ Better Auth runs inside the Convex deployment through the `@convex-dev/better-au
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | `SITE_URL`           | Comma-separated trusted web origins; the first is canonical. `worktree:setup` sets all local ports. Prod: the web URL. |
 | `BETTER_AUTH_SECRET` | 32 random bytes, hex. `worktree:setup` generates it; set your own in prod.                                             |
-| `NATIVE_APP_SCHEME`  | Optional. Defaults to `goods`; must match `scheme` in `apps/native/app.json`.                                           |
+| `NATIVE_APP_SCHEME`  | Optional. Defaults to `goods`; must match `scheme` in `apps/native/app.json`.                                          |
 | `CONVEX_DEBUG`       | `true` on local dev only. Unlocks the dev seed and trusts `exp://` for Expo Go. Never set in prod.                     |
 
 Client env: `VITE_CONVEX_URL` / `VITE_CONVEX_SITE_URL` (web) and `EXPO_PUBLIC_CONVEX_URL` / `EXPO_PUBLIC_CONVEX_SITE_URL` (native). `worktree:setup` writes them.
@@ -26,7 +26,7 @@ Client env: `VITE_CONVEX_URL` / `VITE_CONVEX_SITE_URL` (web) and `EXPO_PUBLIC_CO
 - Email: `dev@example.com` (凱) and `roommate@example.com` (阿澄)
 - Password: `devpassword` for both
 
-Both accounts share one shelf. New accounts can also sign up from the web sign-in page; a new account has no shelf until it is added to one.
+Both accounts share one shelf. A newly registered account starts with its own empty shelf.
 
 ## Tests
 

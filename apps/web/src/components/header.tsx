@@ -31,8 +31,7 @@ export default function Header() {
 
 	return (
 		<header className="bg-background border-b">
-			{/* 1128px column: 12×83px + 11×12px. At 1440 the gutters are 156px; at 1512 they are 192px. */}
-			<div className="mx-auto flex h-12 w-full max-w-[1128px] items-center gap-3 px-4 lg:px-0">
+			<div className="flex h-12 w-full items-center gap-3 px-4">
 				<Link to="/" className="flex items-center gap-2 text-sm font-medium">
 					<Mark />
 					物資

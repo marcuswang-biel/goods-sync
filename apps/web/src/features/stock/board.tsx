@@ -107,7 +107,7 @@ export function Board({ spaceId }: { spaceId: Id<'spaces'> }) {
 	const shelves = [...new Set(items.map((item) => item.shelf))];
 
 	return (
-		<div className="mx-auto flex w-full max-w-[1128px] flex-col gap-3 px-4 py-6 lg:px-0">
+		<div className="flex w-full flex-col gap-3 px-4 py-6">
 			<h1 className="text-2xl leading-none font-medium">
 				<Trans>看板</Trans>
 			</h1>

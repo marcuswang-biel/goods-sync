@@ -40,7 +40,7 @@ function Overview() {
 	}
 	if (!active) {
 		return (
-			<div className="mx-auto max-w-[1128px] px-4 py-8 lg:px-0">
+			<div className="w-full px-4 py-8">
 				<Empty>
 					<EmptyHeader>
 						<EmptyDescription>{t`還沒有貨架。`}</EmptyDescription>

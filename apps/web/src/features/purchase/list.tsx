@@ -80,7 +80,7 @@ export function PurchaseList({ spaceId }: { spaceId: Id<'spaces'> }) {
 	);
 
 	return (
-		<div className="mx-auto flex w-full max-w-[1128px] flex-col gap-3 px-4 py-6 lg:px-0">
+		<div className="flex w-full flex-col gap-3 px-4 py-6">
 			<div className="flex items-end justify-between gap-3">
 				<h1 className="text-2xl leading-none font-medium">
 					<Trans>採購</Trans>

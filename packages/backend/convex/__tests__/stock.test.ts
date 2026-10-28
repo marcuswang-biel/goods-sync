@@ -68,6 +68,23 @@ describe('stock', () => {
 	it('rejects anonymous callers', async () => {
 		const t = convexTest(schema, modules);
 		expect(await codeOf(t.query(api.spaces.listMine, {}))).toBe(APP_ERROR_CODES.unauthenticated);
+		expect(await codeOf(t.mutation(api.spaces.ensureMine, {}))).toBe(
+			APP_ERROR_CODES.unauthenticated,
+		);
+	});
+
+	it('opens one empty shelf for a new account', async () => {
+		const t = convexTest(schema, modules);
+		const alice = await signIn(t, 'alice@example.com');
+
+		const first = await alice.as.mutation(api.spaces.ensureMine, {});
+		const second = await alice.as.mutation(api.spaces.ensureMine, {});
+		const mine = await alice.as.query(api.spaces.listMine, {});
+
+		expect(second).toBe(first);
+		expect(mine).toMatchObject([{ _id: first, name: '貨架' }]);
+		const board = await alice.as.query(api.stock.board, { spaceId: first, today });
+		expect(board.items).toEqual([]);
 	});
 
 	it('hides the shelf from someone who is not a member', async () => {
