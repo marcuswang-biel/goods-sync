@@ -35,8 +35,9 @@ const requiredViteUrl = (name: string) =>
 export const env = createEnv({
 	clientPrefix: 'VITE_',
 	client: {
-		// Injected at build time: prod by the deploy-web CI job (derived from
-		// CONVEX_DEPLOY_KEY), dev from apps/web/.env.local (worktree:setup).
+		// Injected at build time. Production asks Convex for the canonical cloud
+		// and site URLs; the deploy key name omits the region. Dev comes from
+		// apps/web/.env.local (worktree:setup).
 		VITE_CONVEX_URL: requiredViteUrl('VITE_CONVEX_URL'),
 		// Convex HTTP-actions site URL (auth routes live there).
 		VITE_CONVEX_SITE_URL: requiredViteUrl('VITE_CONVEX_SITE_URL'),
