@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/marcuswang-biel/goods-sync/compare/web-v0.2.2...web-v0.3.0) (2026-10-28)
+
+
+### Features
+
+* **web:** rebuild the interface with shadcn ([#9](https://github.com/marcuswang-biel/goods-sync/issues/9)) ([76c4e9c](https://github.com/marcuswang-biel/goods-sync/commit/76c4e9ca404cee485e3fb1990237561905bc6ca4))
+
 ## [0.2.2](https://github.com/marcuswang-biel/goods-sync/compare/web-v0.2.1...web-v0.2.2) (2026-10-28)
 
 
