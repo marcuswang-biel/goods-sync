@@ -116,23 +116,46 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/setup
 
-      # Single source of truth for the prod Convex URL: derive it from
-      # CONVEX_DEPLOY_KEY (format "prod:<deployment-name>|<token>") so it
-      # can never diverge from the deployment deploy-convex shipped to.
+      # The deploy key's name is not a URL. Regional deployments live at
+      # https://<name>.<region>.convex.cloud, and a custom domain would not
+      # match either. Ask Convex, the same way its CLI does.
       - name: Derive Convex prod URL from deploy key
         id: convex_url
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
         run: |
-          name=$(printf '%s' "$CONVEX_DEPLOY_KEY" | sed 's|^prod:||;s|\|.*||')
-          if [ -z "$name" ]; then
-            echo "::error::Could not derive Convex deployment name from CONVEX_DEPLOY_KEY"
+          set -euo pipefail
+          body=$(curl -fsS -X POST https://api.convex.dev/api/deployment/url_for_key \
+            -H 'Content-Type: application/json' \
+            --data "$(jq -n --arg deployKey "$CONVEX_DEPLOY_KEY" '{deployKey:$deployKey}')")
+          deployment_url=$(printf '%s' "$body" | jq -er 'if type == "string" then . else .url // .deploymentUrl // empty end')
+          if [ -z "$deployment_url" ]; then
+            echo "::error::Could not resolve the Convex deployment URL"
             exit 1
           fi
-          url="https://${name}.convex.cloud"
+          canonical=$(curl -fsS "${deployment_url%/}/api/v1/get_canonical_urls" \
+            -H "Authorization: Convex ${CONVEX_DEPLOY_KEY}" \
+            -H 'Content-Type: application/json')
+          url=$(printf '%s' "$canonical" | jq -er '.convexCloudUrl')
+          site_url=$(printf '%s' "$canonical" | jq -er '.convexSiteUrl')
           echo "url=$url" >> "$GITHUB_OUTPUT"
-          echo "site_url=https://${name}.convex.site" >> "$GITHUB_OUTPUT"
+          echo "site_url=$site_url" >> "$GITHUB_OUTPUT"
           echo "Convex prod URL: $url"
+          echo "Convex site URL: $site_url"
+
+      # crossDomain auth trusts SITE_URL. Without it the production deployment
+      # falls back to localhost and the web app cannot sign in.
+      - name: Trust the production web origin
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+        run: |
+          set -euo pipefail
+          pnpm -C packages/backend exec convex env set SITE_URL "https://goods-sync-app.vercel.app"
+          if ! pnpm -C packages/backend exec convex env list --names-only | grep -qx BETTER_AUTH_SECRET; then
+            secret=$(openssl rand -hex 32)
+            echo "::add-mask::$secret"
+            pnpm -C packages/backend exec convex env set BETTER_AUTH_SECRET "$secret"
+          fi
 
       # Pinned on purpose: an unpinned vercel@latest means every prod
       # deploy pulls whatever CLI shipped that day — non-reproducible and
