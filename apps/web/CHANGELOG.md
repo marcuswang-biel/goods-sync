@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/marcuswang-biel/goods-sync/compare/web-v0.3.0...web-v0.4.0) (2026-10-28)
+
+
+### Features
+
+* **web:** stop treating the shelf as a home or an office ([#11](https://github.com/marcuswang-biel/goods-sync/issues/11)) ([a50027c](https://github.com/marcuswang-biel/goods-sync/commit/a50027c9c82c9f5d71713ddf121c9bfe1eda331a))
+
 ## [0.3.0](https://github.com/marcuswang-biel/goods-sync/compare/web-v0.2.2...web-v0.3.0) (2026-10-28)
 
 
