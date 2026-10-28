@@ -1,0 +1,6 @@
+{
+	"git": { "deploymentEnabled": false },
+	"buildCommand": "pnpm exec turbo build --filter=@goods/web",
+	"outputDirectory": "apps/web/dist",
+	"rewrites": [{ "source": "/(.*)", "destination": "/" }]
+}
