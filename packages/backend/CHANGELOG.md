@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/marcuswang-biel/goods-sync/compare/backend-v0.3.0...backend-v0.4.0) (2026-10-28)
+
+
+### Features
+
+* **web:** fill the window and open a shelf for new accounts ([#13](https://github.com/marcuswang-biel/goods-sync/issues/13)) ([072826c](https://github.com/marcuswang-biel/goods-sync/commit/072826ce33e5546225919567922655d0aef1aa31))
+
 ## [0.3.0](https://github.com/marcuswang-biel/goods-sync/compare/backend-v0.2.1...backend-v0.3.0) (2026-10-28)
 
 
