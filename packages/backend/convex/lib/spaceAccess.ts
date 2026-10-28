@@ -6,6 +6,7 @@ import type { QueryCtx } from '../_generated/server';
 
 import { requireUserId } from './identity';
 
+/** Not-found for a missing place or a place this account cannot see. */
 export function notFound(message: string): ConvexError<AppErrorData> {
 	return new ConvexError({ code: APP_ERROR_CODES.notFound, message });
 }

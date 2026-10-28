@@ -18,10 +18,13 @@ export const MovementDraft = Schema.Struct({
 	),
 });
 
+/** One movement after validation. */
 export type MovementDraft = typeof MovementDraft.Type;
 
+/** Why a replayed movement was not applied. */
 export type RejectionCode = 'INSUFFICIENT_STOCK' | 'CAUSAL_CYCLE';
 
+/** One movement after the fold: applied, or rejected with a reason. */
 export type StockOutcome = {
 	readonly clientMutationId: string;
 	readonly outcome: 'applied' | 'rejected';
@@ -29,17 +32,20 @@ export type StockOutcome = {
 	readonly quantityAfter: number;
 };
 
+/** Quantity and version after replaying every movement, plus each outcome. */
 export type StockFold = {
 	readonly quantity: number;
 	readonly version: number;
 	readonly outcomes: readonly StockOutcome[];
 };
 
+/** Opening quantity plus the movements to replay. */
 const LogInput = Schema.Struct({
 	openingQuantity: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
 	movements: Schema.Array(MovementDraft),
 });
 
+/** Earlier timestamp first. The client id breaks a tie so the order is stable. */
 function compareMovement(left: MovementDraft, right: MovementDraft): number {
 	if (left.occurredAt !== right.occurredAt) return left.occurredAt - right.occurredAt;
 	if (left.clientMutationId < right.clientMutationId) return -1;
@@ -47,6 +53,7 @@ function compareMovement(left: MovementDraft, right: MovementDraft): number {
 	return 0;
 }
 
+/** Replays movements after their causal parent, rejecting cycles and takes the shelf cannot cover. */
 function fold(openingQuantity: number, movements: readonly MovementDraft[]): StockFold {
 	const byId = new Map(movements.map((movement) => [movement.clientMutationId, movement]));
 	const remaining = new Set(byId.keys());

@@ -24,6 +24,7 @@ export const authComponent = createClient<DataModel>(components.betterAuth);
 /** Must match `scheme` in apps/native/app.json. */
 const DEFAULT_NATIVE_SCHEME = 'goods';
 
+/** Builds the Better Auth instance for one Convex request. */
 export const createAuth = (ctx: GenericCtx<DataModel>) => {
 	// SITE_URL accepts a comma-separated list so dev deployments can trust several
 	// localhost ports (one per worktree) while prod keeps a single value. The first
@@ -63,7 +64,9 @@ export const ROOMMATE_USER = {
 	name: '阿澄',
 } as const;
 
+/** What the dev-user seed reports back. */
 type DevUserResult = { email: string; userId: string; created: boolean };
+/** One of the two local demo accounts. */
 type DemoAccount = { readonly email: string; readonly password: string; readonly name: string };
 
 /**
@@ -74,6 +77,7 @@ export const ensureDevUserInternal = internalAction({
 	args: {},
 	returns: v.object({ email: v.string(), userId: v.string(), created: v.boolean() }),
 	handler: async (ctx): Promise<DevUserResult> => {
+		/** Creates the account when the email is not already stored. */
 		const ensure = async (account: DemoAccount) => {
 			const existing = await ctx.runQuery(components.betterAuth.adapter.findOne, {
 				model: 'user',

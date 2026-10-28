@@ -4,16 +4,16 @@ import { api } from '@goods/backend/convex/_generated/api';
 import { useMutation, useQuery } from 'convex/react';
 import * as Network from 'expo-network';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 import {
 	clearSynced,
 	loadQueue,
-	queuePurchaseAdd,
 	queuePurchaseBuy,
 	type OfflineOperation,
 } from '@/lib/offline-queue';
 
+/** Phone purchases: check a trip off, and flush buys that were queued offline. */
 export function PurchaseScreen() {
 	const spaces = useQuery(api.spaces.listMine);
 	const space = spaces?.[0];
@@ -22,54 +22,32 @@ export function PurchaseScreen() {
 	const sync = useMutation(api.purchases.sync);
 	const [market, setMarket] = useState(false);
 	const [queue, setQueue] = useState<readonly OfflineOperation[]>([]);
-	const [name, setName] = useState('');
-	const [dollars, setDollars] = useState('');
 	const [note, setNote] = useState<string | null>(null);
 
 	useEffect(() => {
 		void loadQueue().then(setQueue);
 	}, []);
 
-	const localAdds = queue.filter((operation) => operation.tag === 'purchase-add');
-
-	const add = async () => {
-		const cents = Math.round(Number(dollars) * 100);
-		if (!name.trim() || !Number.isInteger(cents) || cents <= 0) {
-			setNote('請填名稱和金額。');
-			return;
-		}
-		const operation = {
-			clientMutationId: `add-${Date.now()}`,
-			name: name.trim(),
-			quantity: 1,
-			estimatedCents: cents,
-			occurredAt: Date.now(),
-		};
-		const online = await deviceOnline();
-		if (!market && online && space) {
-			await sync({
-				spaceId: space._id,
-				ops: [{ tag: 'add', linkedItemId: null, ...operation }],
-			});
-			setNote('已加入清單。');
-		} else {
-			const next = await queuePurchaseAdd(queue, operation);
-			setQueue(next);
-			setNote('已記在這支手機上。');
-		}
-		setName('');
-		setDollars('');
-	};
-
-	const buy = async (lineClientMutationId: string) => {
+	/** Checks a trip off, or stores the check until the phone is back online. */
+	const buy = async (purchaseClientMutationId: string) => {
 		const operation = {
 			clientMutationId: `buy-${Date.now()}`,
-			lineClientMutationId,
+			lineClientMutationId: purchaseClientMutationId,
 			occurredAt: Date.now(),
 		};
 		const online = await deviceOnline();
 		if (!market && online && space) {
-			const results = await sync({ spaceId: space._id, ops: [{ tag: 'buy', ...operation }] });
+			const results = await sync({
+				spaceId: space._id,
+				ops: [
+					{
+						tag: 'buy',
+						clientMutationId: operation.clientMutationId,
+						purchaseClientMutationId,
+						occurredAt: operation.occurredAt,
+					},
+				],
+			});
 			const rejected = results.find((row) => row.outcome === 'rejected');
 			setNote(rejected ? '這筆沒有勾上。' : '已採購。');
 		} else {
@@ -79,37 +57,24 @@ export function PurchaseScreen() {
 		}
 	};
 
+	/** Sends queued buys and takes, then drops the ids the server accepted. */
 	const flush = async () => {
 		if (!space) return;
-		const adds = queue.filter((operation) => operation.tag === 'purchase-add');
+		const staleAdds = queue.filter((operation) => operation.tag === 'purchase-add');
 		const buys = queue.filter((operation) => operation.tag === 'purchase-buy');
 		const moves = queue.filter((operation) => operation.tag === 'movement');
-		const ids: string[] = [];
-		if (adds.length > 0 || buys.length > 0) {
+		const ids: string[] = staleAdds.map((operation) => operation.clientMutationId);
+		if (buys.length > 0) {
 			await sync({
 				spaceId: space._id,
-				ops: [
-					...adds.map((operation) => ({
-						tag: 'add' as const,
-						clientMutationId: operation.clientMutationId,
-						name: operation.name,
-						quantity: operation.quantity,
-						estimatedCents: operation.estimatedCents,
-						linkedItemId: null,
-						occurredAt: operation.occurredAt,
-					})),
-					...buys.map((operation) => ({
-						tag: 'buy' as const,
-						clientMutationId: operation.clientMutationId,
-						lineClientMutationId: operation.lineClientMutationId,
-						occurredAt: operation.occurredAt,
-					})),
-				],
+				ops: buys.map((operation) => ({
+					tag: 'buy' as const,
+					clientMutationId: operation.clientMutationId,
+					purchaseClientMutationId: operation.lineClientMutationId,
+					occurredAt: operation.occurredAt,
+				})),
 			});
-			ids.push(
-				...adds.map((operation) => operation.clientMutationId),
-				...buys.map((operation) => operation.clientMutationId),
-			);
+			ids.push(...buys.map((operation) => operation.clientMutationId));
 		}
 		const byItem = new Map<string, typeof moves>();
 		for (const movement of moves) {
@@ -139,8 +104,8 @@ export function PurchaseScreen() {
 		setNote('已合併到空間。');
 	};
 
-	const open = list?.lines.filter((line) => line.status === 'open') ?? [];
-	const total = open.reduce((sum, line) => sum + line.estimatedCents, 0);
+	const open = list?.purchases.filter((purchase) => purchase.status === 'open') ?? [];
+	const total = open.reduce((sum, purchase) => sum + purchase.totalCents, 0);
 
 	return (
 		<ScrollView style={styles.page} contentContainerStyle={styles.content}>
@@ -158,53 +123,42 @@ export function PurchaseScreen() {
 				</Pressable>
 			)}
 			<View style={styles.panel}>
-				{(list?.lines ?? []).map((line) => (
-					<View key={line._id} style={styles.row}>
+				{(list?.purchases ?? []).map((purchase) => (
+					<View key={purchase._id} style={styles.row}>
 						<View style={styles.rowText}>
-							<Text style={styles.name}>{line.name}</Text>
-							<Text style={styles.muted}>{formatCents(line.estimatedCents)}</Text>
+							{purchase.items.map((item) => (
+								<Text key={item._id} style={styles.name}>
+									{item.name} × {item.quantity}
+								</Text>
+							))}
+							<Text style={styles.muted}>{formatCents(purchase.totalCents)}</Text>
 						</View>
-						{line.status === 'open' && (
-							<Pressable style={styles.hit} onPress={() => void buy(line.clientMutationId)}>
+						{purchase.status === 'open' && (
+							<Pressable style={styles.hit} onPress={() => void buy(purchase.clientMutationId)}>
 								<Text>已採購</Text>
 							</Pressable>
 						)}
 					</View>
 				))}
-				{localAdds.map((operation) => (
-					<View key={operation.clientMutationId} style={styles.row}>
-						<Text style={styles.name}>{operation.name}</Text>
-						<Text style={styles.muted}>待合併</Text>
-					</View>
-				))}
 			</View>
-			<Text style={styles.section}>在超市補一筆</Text>
-			<TextInput value={name} onChangeText={setName} placeholder="名稱" style={styles.input} />
-			<TextInput
-				value={dollars}
-				onChangeText={setDollars}
-				placeholder="金額"
-				keyboardType="decimal-pad"
-				style={styles.input}
-			/>
-			<Pressable style={styles.flush} onPress={() => void add()}>
-				<Text style={styles.flushLabel}>加入</Text>
-			</Pressable>
 		</ScrollView>
 	);
 }
 
+/** Formats integer cents as Hong Kong dollars. */
 function formatCents(cents: number): string {
 	const dollars = Math.floor(cents / 100).toLocaleString('en-HK');
 	const fraction = String(cents % 100).padStart(2, '0');
 	return `HK$${dollars}.${fraction}`;
 }
 
+/** True when the phone can reach the server. An unknown reachability still counts as online. */
 async function deviceOnline(): Promise<boolean> {
 	const state = await Network.getNetworkStateAsync();
 	return state.isConnected === true && state.isInternetReachable !== false;
 }
 
+/** Layout for the phone purchase list. */
 const styles = StyleSheet.create({
 	page: { flex: 1, backgroundColor: '#f2f4f7' },
 	content: { padding: 16, paddingBottom: 48 },
@@ -240,14 +194,4 @@ const styles = StyleSheet.create({
 	name: { fontSize: 14 },
 	muted: { fontSize: 12, color: '#6b6b6b' },
 	hit: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 8 },
-	section: { marginTop: 20, fontSize: 16, fontWeight: '500' },
-	input: {
-		marginTop: 8,
-		height: 44,
-		borderWidth: 1,
-		borderColor: '#d4d4d4',
-		borderRadius: 6,
-		backgroundColor: '#ffffff',
-		paddingHorizontal: 12,
-	},
 });

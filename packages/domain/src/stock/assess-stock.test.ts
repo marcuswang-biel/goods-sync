@@ -1,7 +1,7 @@
 import { describe, expect, it } from '@effect/vitest';
 import { Effect } from 'effect';
 
-import { assessStock, compareUrgency, isAttention, type ShelfRow } from './assess-stock';
+import { assessStock, isAttention, type ShelfRow } from './assess-stock';
 import { InvalidStock } from './errors';
 import { stockPolicyLayer } from './stock-policy';
 
@@ -24,7 +24,7 @@ describe('assessStock', () => {
 				expiresOn: '2026-10-31',
 				today: '2026-10-28',
 			});
-			expect(assessment).toEqual({ freshness: 'soon', supply: 'low', shortfall: 1 });
+			expect(assessment).toEqual({ freshness: 'soon', supply: 'low' });
 		}).pipe(Effect.provide(policy)),
 	);
 
@@ -44,7 +44,7 @@ describe('assessStock', () => {
 			});
 			expect(today.freshness).toBe('soon');
 			expect(later.freshness).toBe('ok');
-			expect(later.shortfall).toBe(0);
+			expect(later.supply).toBe('ok');
 		}).pipe(Effect.provide(policy)),
 	);
 
@@ -56,7 +56,7 @@ describe('assessStock', () => {
 				expiresOn: '2026-10-27',
 				today: '2026-10-28',
 			});
-			expect(assessment).toEqual({ freshness: 'expired', supply: 'out', shortfall: 1 });
+			expect(assessment).toEqual({ freshness: 'expired', supply: 'out' });
 		}).pipe(Effect.provide(policy)),
 	);
 
@@ -88,12 +88,12 @@ describe('assessStock', () => {
 	);
 });
 
-describe('compareUrgency', () => {
-	it('puts an empty shelf ahead of a merely short one', () => {
-		const empty = row({ name: '醬油', supply: 'out', quantity: 0 });
-		const short = row({ name: '牛奶', supply: 'low', freshness: 'soon', expiresOn: '2026-10-29' });
-		expect(isAttention(empty)).toBe(true);
-		expect(compareUrgency(empty, short)).toBeLessThan(0);
+describe('isAttention', () => {
+	it('marks an empty or short shelf, and leaves a stocked one alone', () => {
+		expect(isAttention(row({ name: '醬油', supply: 'out', quantity: 0 }))).toBe(true);
+		expect(
+			isAttention(row({ name: '牛奶', supply: 'low', freshness: 'soon', expiresOn: '2026-10-29' })),
+		).toBe(true);
 		expect(isAttention(row({ name: '衛生紙' }))).toBe(false);
 	});
 });

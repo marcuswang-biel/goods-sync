@@ -4,18 +4,21 @@ import { addIsoDays, isRealIsoDate } from './calendar';
 import { InvalidStock } from './errors';
 import { StockPolicy } from './stock-policy';
 
+/** How close an item is to its expiry date. Undated goods never count as soon. */
 export type Freshness = 'undated' | 'ok' | 'soon' | 'expired';
+/** Whether the shelf is above, on, or through the safety line. */
 export type Supply = 'ok' | 'low' | 'out';
 
+/** Classification of one item for a given day. */
 export type StockAssessment = {
 	readonly freshness: Freshness;
 	readonly supply: Supply;
-	/** Units still needed to reach the safety line. Zero when the shelf is at or above it. */
-	readonly shortfall: number;
 };
 
+/** `YYYY-MM-DD` text. A real calendar day is checked after this shape matches. */
 const IsoDate = Schema.String.check(Schema.isPattern(/^\d{4}-\d{2}-\d{2}$/));
 
+/** Inputs the assessor will classify. */
 const AssessInput = Schema.Struct({
 	quantity: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
 	safetyQuantity: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
@@ -23,6 +26,7 @@ const AssessInput = Schema.Struct({
 	today: IsoDate,
 });
 
+/** A shelf row the queue screens compare. */
 export type ShelfRow = {
 	readonly name: string;
 	readonly quantity: number;
@@ -41,36 +45,12 @@ export function isShort(supply: Supply): boolean {
 	return supply === 'low' || supply === 'out';
 }
 
+/** True when the item should be eaten soon or is at or under its safety line. */
 export function isAttention(row: {
 	readonly freshness: Freshness;
 	readonly supply: Supply;
 }): boolean {
 	return isExpiring(row.freshness) || isShort(row.supply);
-}
-
-function urgencyRank(row: ShelfRow): number {
-	if (row.freshness === 'expired') return 0;
-	if (row.supply === 'out') return 1;
-	if (row.freshness === 'soon' && row.supply === 'low') return 2;
-	if (row.freshness === 'soon') return 3;
-	if (row.supply === 'low') return 4;
-	return 5;
-}
-
-/**
- * Most urgent first. A tie breaks toward the earlier expiry, then the name,
- * so two clients pick the same lead from the same shelf.
- */
-export function compareUrgency(left: ShelfRow, right: ShelfRow): number {
-	const rank = urgencyRank(left) - urgencyRank(right);
-	if (rank !== 0) return rank;
-	const leftDate = left.expiresOn ?? '9999-99-99';
-	const rightDate = right.expiresOn ?? '9999-99-99';
-	if (leftDate < rightDate) return -1;
-	if (leftDate > rightDate) return 1;
-	if (left.name < right.name) return -1;
-	if (left.name > right.name) return 1;
-	return 0;
 }
 
 /**
@@ -103,10 +83,5 @@ export const assessStock = (input: unknown) =>
 		const supply: Supply =
 			decoded.quantity === 0 ? 'out' : decoded.quantity <= decoded.safetyQuantity ? 'low' : 'ok';
 
-		const assessment: StockAssessment = {
-			freshness,
-			supply,
-			shortfall: Math.max(0, decoded.safetyQuantity - decoded.quantity),
-		};
-		return assessment;
+		return { freshness, supply };
 	});

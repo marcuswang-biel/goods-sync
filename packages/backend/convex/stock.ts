@@ -21,10 +21,10 @@ import {
 	outcomeValidator,
 	rejectionCodeValidator,
 	shelfValidator,
-	spaceKindValidator,
 	supplyValidator,
 } from './schema';
 
+/** One shelf row as the board returns it, including freshness and supply. */
 const itemView = v.object({
 	_id: v.id('items'),
 	name: v.string(),
@@ -37,9 +37,9 @@ const itemView = v.object({
 	version: v.number(),
 	freshness: freshnessValidator,
 	supply: supplyValidator,
-	shortfall: v.number(),
 });
 
+/** One take as the board returns it. */
 const movementView = v.object({
 	_id: v.id('movements'),
 	itemId: v.id('items'),
@@ -53,6 +53,7 @@ const movementView = v.object({
 	rejectionCode: rejectionCodeValidator,
 });
 
+/** Maps a failed stock assessment onto the shared invalid-stock code. */
 function throwAssessment(error: StockError): never {
 	throw new ConvexError<AppErrorData>({
 		code: APP_ERROR_CODES.stockInvalid,
@@ -60,18 +61,14 @@ function throwAssessment(error: StockError): never {
 	});
 }
 
-/** The shelf, who shares it, and the latest takes — the live board both clients render. */
+/** The shelf and the latest takes. Both clients render this. */
 export const board = query({
 	args: { spaceId: v.id('spaces'), today: v.string() },
 	returns: v.object({
 		space: v.object({
 			_id: v.id('spaces'),
 			name: v.string(),
-			kind: spaceKindValidator,
-			budgetCents: v.union(v.number(), v.null()),
 		}),
-		memberCount: v.number(),
-		members: v.array(v.object({ userId: v.string(), label: v.string() })),
 		items: v.array(itemView),
 		movements: v.array(movementView),
 	}),
@@ -115,7 +112,6 @@ export const board = query({
 				version: item.version,
 				freshness: assessment.freshness,
 				supply: assessment.supply,
-				shortfall: assessment.shortfall,
 			});
 		}
 
@@ -146,17 +142,14 @@ export const board = query({
 			space: {
 				_id: space._id,
 				name: space.name,
-				kind: space.kind,
-				budgetCents: space.budgetCents,
 			},
-			memberCount: members.length,
-			members: members.map((member) => ({ userId: member.userId, label: member.label })),
 			items,
 			movements: movements.slice(0, 8),
 		};
 	},
 });
 
+/** Outcome of one take in a stock sync. */
 const syncResult = v.object({
 	clientMutationId: v.string(),
 	outcome: outcomeValidator,
@@ -259,5 +252,54 @@ export const create = mutation({
 			version: 0,
 			createdBy: userId,
 		});
+	},
+});
+
+/**
+ * Takes a good off the shelf. Take history goes with it. A purchase keeps the
+ * written name and drops the link, so checking that purchase off does not
+ * try to restock a good that is gone.
+ */
+export const remove = mutation({
+	args: {
+		spaceId: v.id('spaces'),
+		itemId: v.id('items'),
+	},
+	returns: v.null(),
+	handler: async (ctx, args) => {
+		await requireSpaceMember(ctx, args.spaceId);
+		const item = await ctx.db.get('items', args.itemId);
+		if (!item || item.spaceId !== args.spaceId) throw notFound('Item not found.');
+
+		const movements = await ctx.db
+			.query('movements')
+			.withIndex('by_item', (q) => q.eq('itemId', args.itemId))
+			.collect();
+		for (const movement of movements) {
+			await ctx.db.delete('movements', movement._id);
+		}
+
+		const purchaseItems = await ctx.db
+			.query('purchaseItems')
+			.withIndex('by_space', (q) => q.eq('spaceId', args.spaceId))
+			.collect();
+		for (const row of purchaseItems) {
+			if (row.itemId === args.itemId) {
+				await ctx.db.patch('purchaseItems', row._id, { itemId: null });
+			}
+		}
+
+		const lines = await ctx.db
+			.query('purchaseLines')
+			.withIndex('by_space', (q) => q.eq('spaceId', args.spaceId))
+			.collect();
+		for (const line of lines) {
+			if (line.linkedItemId === args.itemId) {
+				await ctx.db.patch('purchaseLines', line._id, { linkedItemId: null });
+			}
+		}
+
+		await ctx.db.delete('items', args.itemId);
+		return null;
 	},
 });

@@ -1,73 +1,68 @@
 import {
-	chargeDepartmentBudget,
-	draftPurchase,
-	draftShelfItem,
-	quoteEqualSplit,
+	draftPurchaseBasket,
+	draftPurchaseQuantity,
+	type PurchaseBasket,
 	type PurchaseError,
-	type StockError,
-} from '@goods/domain/stock';
+} from '@goods/domain/purchase';
 import { APP_ERROR_CODES, type AppErrorData } from '@goods/shared/error-codes';
 import { ConvexError, v } from 'convex/values';
 import { Cause, Effect, Exit } from 'effect';
 
 import type { Id } from './_generated/dataModel';
+import type { MutationCtx } from './_generated/server';
 
-import { query, type MutationCtx } from './_generated/server';
+import { query } from './_generated/server';
 import { mutation } from './functions';
 import { applyStockOps } from './lib/applyStock';
 import { notFound, requireSpaceMember } from './lib/spaceAccess';
-import {
-	itemCategoryValidator,
-	itemUnitValidator,
-	purchaseStatusValidator,
-	shelfValidator,
-} from './schema';
+import { itemUnitValidator, purchaseStatusValidator } from './schema';
 
-const lineView = v.object({
-	_id: v.id('purchaseLines'),
-	clientMutationId: v.string(),
+/** One line as the purchase list returns it. The item id is null after the good is deleted. */
+const itemView = v.object({
+	_id: v.id('purchaseItems'),
+	itemId: v.union(v.id('items'), v.null()),
 	name: v.string(),
+	unit: v.union(itemUnitValidator, v.null()),
 	quantity: v.number(),
-	estimatedCents: v.number(),
-	linkedItemId: v.union(v.id('items'), v.null()),
-	status: purchaseStatusValidator,
-	perPersonCents: v.union(v.number(), v.null()),
-	remainderCents: v.union(v.number(), v.null()),
-	departmentChargeCents: v.union(v.number(), v.null()),
-	fitsBudget: v.boolean(),
 });
 
+/** One trip as the purchase list returns it, with its lines. */
+const purchaseView = v.object({
+	_id: v.id('purchases'),
+	clientMutationId: v.string(),
+	totalCents: v.number(),
+	status: purchaseStatusValidator,
+	items: v.array(itemView),
+});
+
+/** Outcome of one add or buy in a sync batch. */
 const opResult = v.object({
 	clientMutationId: v.string(),
 	outcome: v.union(v.literal('applied'), v.literal('rejected'), v.literal('duplicate')),
-	rejectionCode: v.union(
-		v.literal('PURCHASE_INVALID'),
-		v.literal('BUDGET_EXCEEDED'),
-		v.literal('NOT_FOUND'),
-		v.null(),
-	),
+	rejectionCode: v.union(v.literal('PURCHASE_INVALID'), v.literal('NOT_FOUND'), v.null()),
 });
 
-function purchaseCode(error: PurchaseError): 'PURCHASE_INVALID' | 'BUDGET_EXCEEDED' {
-	return error._tag === 'BudgetExceeded' ? 'BUDGET_EXCEEDED' : 'PURCHASE_INVALID';
+/** Same shape as `opResult`, for the handler's local array. */
+type OpResult = {
+	clientMutationId: string;
+	outcome: 'applied' | 'rejected' | 'duplicate';
+	rejectionCode: 'PURCHASE_INVALID' | 'NOT_FOUND' | null;
+};
+
+/** True for a tagged purchase failure. A validated quantity is a number and is not an error. */
+function isPurchaseError(value: PurchaseBasket | PurchaseError | number): value is PurchaseError {
+	return typeof value === 'object' && value !== null && '_tag' in value;
 }
 
-function isPurchaseError<A extends object>(value: A | PurchaseError): value is PurchaseError {
-	return '_tag' in value;
+/** A sync row the client should show as rejected. */
+function rejected(
+	clientMutationId: string,
+	rejectionCode: 'PURCHASE_INVALID' | 'NOT_FOUND',
+): OpResult {
+	return { clientMutationId, outcome: 'rejected', rejectionCode };
 }
 
-function isStockError<A extends object>(value: A | StockError): value is StockError {
-	return '_tag' in value && value._tag === 'InvalidStock';
-}
-
-async function runShelf<A>(program: Effect.Effect<A, StockError>): Promise<A | StockError> {
-	const exit = await Effect.runPromiseExit(program);
-	if (Exit.isSuccess(exit)) return exit.value;
-	const failure = Cause.findErrorOption(exit.cause);
-	if (failure._tag === 'Some') return failure.value;
-	throw Cause.squash(exit.cause);
-}
-
+/** Runs a purchase Effect and returns its tagged error instead of throwing it. */
 async function runPurchase<A>(
 	program: Effect.Effect<A, PurchaseError>,
 ): Promise<A | PurchaseError> {
@@ -78,96 +73,65 @@ async function runPurchase<A>(
 	throw Cause.squash(exit.cause);
 }
 
-/** Open and bought lines, with the split or budget preview the screen prints. */
+/** Open and bought trips. */
 export const list = query({
 	args: { spaceId: v.id('spaces') },
 	returns: v.object({
-		kind: v.union(v.literal('household'), v.literal('partners'), v.literal('office')),
-		memberCount: v.number(),
-		budgetCents: v.union(v.number(), v.null()),
-		lines: v.array(lineView),
+		purchases: v.array(purchaseView),
 	}),
 	handler: async (ctx, args) => {
-		const { space } = await requireSpaceMember(ctx, args.spaceId);
-		const members = await ctx.db
-			.query('memberships')
-			.withIndex('by_space', (q) => q.eq('spaceId', args.spaceId))
-			.collect();
+		await requireSpaceMember(ctx, args.spaceId);
 		const stored = await ctx.db
-			.query('purchaseLines')
+			.query('purchases')
 			.withIndex('by_space', (q) => q.eq('spaceId', args.spaceId))
 			.collect();
-		stored.sort((left, right) => left.createdAt - right.createdAt);
+		const ordered = stored.toSorted((left, right) => left.createdAt - right.createdAt);
+		const goods = await ctx.db
+			.query('purchaseItems')
+			.withIndex('by_space', (q) => q.eq('spaceId', args.spaceId))
+			.collect();
 
-		const lines = [];
-		for (const line of stored) {
-			let perPersonCents = line.perPersonCents;
-			let remainderCents = line.remainderCents;
-			let departmentChargeCents = line.departmentChargeCents;
-			let fitsBudget = true;
+		const purchases = [];
+		for (const purchase of ordered) {
+			const items = goods
+				.filter((good) => good.purchaseId === purchase._id)
+				.toSorted((left, right) => left._creationTime - right._creationTime)
+				.map((good) => ({
+					_id: good._id,
+					itemId: good.itemId,
+					name: good.name,
+					unit: good.unit,
+					quantity: good.quantity,
+				}));
 
-			if (line.status === 'open' && space.kind === 'office') {
-				departmentChargeCents = line.estimatedCents;
-				if (space.budgetCents === null) {
-					fitsBudget = false;
-				} else {
-					const charged = await runPurchase(
-						chargeDepartmentBudget({
-							remainingCents: space.budgetCents,
-							chargeCents: line.estimatedCents,
-						}),
-					);
-					fitsBudget = !isPurchaseError(charged);
-				}
-			} else if (line.status === 'open') {
-				const quoted = await runPurchase(
-					quoteEqualSplit({ totalCents: line.estimatedCents, memberCount: members.length }),
-				);
-				if (!isPurchaseError(quoted)) {
-					perPersonCents = quoted.perPersonCents;
-					remainderCents = quoted.remainderCents;
-				}
-			}
-
-			lines.push({
-				_id: line._id,
-				clientMutationId: line.clientMutationId,
-				name: line.name,
-				quantity: line.quantity,
-				estimatedCents: line.estimatedCents,
-				linkedItemId: line.linkedItemId,
-				status: line.status,
-				perPersonCents,
-				remainderCents,
-				departmentChargeCents,
-				fitsBudget,
+			purchases.push({
+				_id: purchase._id,
+				clientMutationId: purchase.clientMutationId,
+				totalCents: purchase.totalCents,
+				status: purchase.status,
+				items,
 			});
 		}
 
-		return {
-			kind: space.kind,
-			memberCount: members.length,
-			budgetCents: space.budgetCents,
-			lines,
-		};
+		return { purchases };
 	},
 });
 
+/** Adds the bought quantity back onto a shelf item that is still linked. */
 async function restockLinked(
 	ctx: MutationCtx,
 	spaceId: Id<'spaces'>,
-	linkedItemId: Id<'items'> | null,
+	itemId: Id<'items'>,
 	actorId: string,
 	clientMutationId: string,
 	quantity: number,
 	occurredAt: number,
 ) {
-	if (linkedItemId === null) return;
-	const item = await ctx.db.get('items', linkedItemId);
+	const item = await ctx.db.get('items', itemId);
 	if (!item || item.spaceId !== spaceId) throw notFound('Item not found.');
-	await applyStockOps(ctx, linkedItemId, actorId, [
+	await applyStockOps(ctx, itemId, actorId, [
 		{
-			clientMutationId: `${clientMutationId}:restock`,
+			clientMutationId,
 			kind: 'restock',
 			quantity,
 			occurredAt,
@@ -178,9 +142,8 @@ async function restockLinked(
 }
 
 /**
- * Sync shopping-list edits. Adds land first, then checks, so a line typed in
- * the aisle can be ticked in the same flush. Office lines that do not fit the
- * budget stay open.
+ * Sync shopping trips. An add stores many goods and one total. Checking it
+ * off restocks every linked good.
  */
 export const sync = mutation({
 	args: {
@@ -190,44 +153,27 @@ export const sync = mutation({
 				v.object({
 					tag: v.literal('add'),
 					clientMutationId: v.string(),
-					name: v.string(),
-					quantity: v.number(),
-					estimatedCents: v.number(),
-					linkedItemId: v.union(v.id('items'), v.null()),
+					totalCents: v.number(),
 					occurredAt: v.number(),
+					items: v.array(
+						v.object({
+							itemId: v.id('items'),
+							quantity: v.number(),
+						}),
+					),
 				}),
 				v.object({
 					tag: v.literal('buy'),
 					clientMutationId: v.string(),
-					lineClientMutationId: v.string(),
+					purchaseClientMutationId: v.string(),
 					occurredAt: v.number(),
-				}),
-				v.object({
-					tag: v.literal('receive'),
-					mode: v.literal('existing'),
-					clientMutationId: v.string(),
-					lineClientMutationId: v.string(),
-					occurredAt: v.number(),
-					itemId: v.id('items'),
-				}),
-				v.object({
-					tag: v.literal('receive'),
-					mode: v.literal('new'),
-					clientMutationId: v.string(),
-					lineClientMutationId: v.string(),
-					occurredAt: v.number(),
-					category: itemCategoryValidator,
-					unit: itemUnitValidator,
-					safetyQuantity: v.number(),
-					expiresOn: v.union(v.string(), v.null()),
-					shelf: shelfValidator,
 				}),
 			),
 		),
 	},
 	returns: v.array(opResult),
 	handler: async (ctx, args) => {
-		const { userId, space } = await requireSpaceMember(ctx, args.spaceId);
+		const { userId } = await requireSpaceMember(ctx, args.spaceId);
 		if (args.ops.length > 40) {
 			throw new ConvexError<AppErrorData>({
 				code: APP_ERROR_CODES.purchaseInvalid,
@@ -235,21 +181,15 @@ export const sync = mutation({
 			});
 		}
 
-		const results: Array<{
-			clientMutationId: string;
-			outcome: 'applied' | 'rejected' | 'duplicate';
-			rejectionCode: 'PURCHASE_INVALID' | 'BUDGET_EXCEEDED' | 'NOT_FOUND' | null;
-		}> = [];
-
+		const results: OpResult[] = [];
 		const adds = args.ops.filter((operation) => operation.tag === 'add');
 		const buys = args.ops
 			.filter((operation) => operation.tag === 'buy')
-			.slice()
-			.sort((left, right) => left.occurredAt - right.occurredAt);
+			.toSorted((left, right) => left.occurredAt - right.occurredAt);
 
 		for (const operation of adds) {
 			const existing = await ctx.db
-				.query('purchaseLines')
+				.query('purchases')
 				.withIndex('by_space_and_client', (q) =>
 					q.eq('spaceId', args.spaceId).eq('clientMutationId', operation.clientMutationId),
 				)
@@ -262,76 +202,80 @@ export const sync = mutation({
 				});
 				continue;
 			}
+
 			const drafted = await runPurchase(
-				draftPurchase({
-					name: operation.name,
-					quantity: operation.quantity,
-					estimatedCents: operation.estimatedCents,
+				draftPurchaseBasket({
+					totalCents: operation.totalCents,
+					items: operation.items.map((item) => ({
+						itemId: item.itemId,
+						quantity: item.quantity,
+					})),
 				}),
 			);
 			if (isPurchaseError(drafted)) {
-				results.push({
-					clientMutationId: operation.clientMutationId,
-					outcome: 'rejected',
-					rejectionCode: purchaseCode(drafted),
-				});
+				results.push(rejected(operation.clientMutationId, 'PURCHASE_INVALID'));
 				continue;
 			}
-			if (operation.linkedItemId !== null) {
-				const linked = await ctx.db.get('items', operation.linkedItemId);
-				if (!linked || linked.spaceId !== args.spaceId) {
-					results.push({
-						clientMutationId: operation.clientMutationId,
-						outcome: 'rejected',
-						rejectionCode: 'NOT_FOUND',
-					});
-					continue;
+
+			const rows = [];
+			let missing = false;
+			for (const entry of drafted.items) {
+				const source = operation.items.find((item) => item.itemId === entry.itemId);
+				if (!source) {
+					missing = true;
+					break;
 				}
+				const item = await ctx.db.get('items', source.itemId);
+				if (!item || item.spaceId !== args.spaceId) {
+					missing = true;
+					break;
+				}
+				rows.push({ item, quantity: entry.quantity });
 			}
-			await ctx.db.insert('purchaseLines', {
+			if (missing) {
+				results.push(rejected(operation.clientMutationId, 'NOT_FOUND'));
+				continue;
+			}
+
+			const purchaseId = await ctx.db.insert('purchases', {
 				spaceId: args.spaceId,
 				clientMutationId: operation.clientMutationId,
-				name: drafted.name,
-				quantity: drafted.quantity,
-				estimatedCents: drafted.estimatedCents,
-				linkedItemId: operation.linkedItemId,
+				totalCents: drafted.totalCents,
 				status: 'open',
 				createdBy: userId,
 				createdAt: operation.occurredAt,
 				boughtBy: null,
 				boughtAt: null,
-				perPersonCents: null,
-				remainderCents: null,
-				departmentChargeCents: null,
 			});
+			for (const row of rows) {
+				await ctx.db.insert('purchaseItems', {
+					purchaseId,
+					spaceId: args.spaceId,
+					itemId: row.item._id,
+					name: row.item.name,
+					unit: row.item.unit,
+					quantity: row.quantity,
+				});
+			}
 			results.push({
 				clientMutationId: operation.clientMutationId,
 				outcome: 'applied',
 				rejectionCode: null,
 			});
 		}
-
-		const members = await ctx.db
-			.query('memberships')
-			.withIndex('by_space', (q) => q.eq('spaceId', args.spaceId))
-			.collect();
 
 		for (const operation of buys) {
-			const line = await ctx.db
-				.query('purchaseLines')
+			const purchase = await ctx.db
+				.query('purchases')
 				.withIndex('by_space_and_client', (q) =>
-					q.eq('spaceId', args.spaceId).eq('clientMutationId', operation.lineClientMutationId),
+					q.eq('spaceId', args.spaceId).eq('clientMutationId', operation.purchaseClientMutationId),
 				)
 				.unique();
-			if (!line) {
-				results.push({
-					clientMutationId: operation.clientMutationId,
-					outcome: 'rejected',
-					rejectionCode: 'NOT_FOUND',
-				});
+			if (!purchase) {
+				results.push(rejected(operation.clientMutationId, 'NOT_FOUND'));
 				continue;
 			}
-			if (line.status === 'bought') {
+			if (purchase.status === 'bought') {
 				results.push({
 					clientMutationId: operation.clientMutationId,
 					outcome: 'duplicate',
@@ -340,160 +284,42 @@ export const sync = mutation({
 				continue;
 			}
 
-			if (space.kind === 'office') {
-				const remaining = (await ctx.db.get('spaces', args.spaceId))?.budgetCents;
-				if (remaining === null || remaining === undefined) {
-					results.push({
-						clientMutationId: operation.clientMutationId,
-						outcome: 'rejected',
-						rejectionCode: 'BUDGET_EXCEEDED',
-					});
-					continue;
-				}
-				const charged = await runPurchase(
-					chargeDepartmentBudget({ remainingCents: remaining, chargeCents: line.estimatedCents }),
-				);
-				if (isPurchaseError(charged)) {
-					results.push({
-						clientMutationId: operation.clientMutationId,
-						outcome: 'rejected',
-						rejectionCode: purchaseCode(charged),
-					});
-					continue;
-				}
-				await ctx.db.patch('spaces', args.spaceId, { budgetCents: charged.remainingCents });
-				await restockLinked(
-					ctx,
-					args.spaceId,
-					line.linkedItemId,
-					userId,
-					operation.clientMutationId,
-					line.quantity,
-					operation.occurredAt,
-				);
-				await ctx.db.patch('purchaseLines', line._id, {
-					status: 'bought',
-					boughtBy: userId,
-					boughtAt: operation.occurredAt,
-					departmentChargeCents: line.estimatedCents,
-				});
-			} else {
-				const quoted = await runPurchase(
-					quoteEqualSplit({ totalCents: line.estimatedCents, memberCount: members.length }),
-				);
-				if (isPurchaseError(quoted)) {
-					results.push({
-						clientMutationId: operation.clientMutationId,
-						outcome: 'rejected',
-						rejectionCode: purchaseCode(quoted),
-					});
-					continue;
-				}
-				await restockLinked(
-					ctx,
-					args.spaceId,
-					line.linkedItemId,
-					userId,
-					operation.clientMutationId,
-					line.quantity,
-					operation.occurredAt,
-				);
-				await ctx.db.patch('purchaseLines', line._id, {
-					status: 'bought',
-					boughtBy: userId,
-					boughtAt: operation.occurredAt,
-					perPersonCents: quoted.perPersonCents,
-					remainderCents: quoted.remainderCents,
-				});
-			}
-			results.push({
-				clientMutationId: operation.clientMutationId,
-				outcome: 'applied',
-				rejectionCode: null,
-			});
-		}
-
-		const receives = args.ops.filter((operation) => operation.tag === 'receive');
-		for (const operation of receives) {
-			const line = await ctx.db
-				.query('purchaseLines')
-				.withIndex('by_space_and_client', (q) =>
-					q.eq('spaceId', args.spaceId).eq('clientMutationId', operation.lineClientMutationId),
-				)
-				.unique();
-			if (!line || line.status !== 'bought') {
-				results.push({
-					clientMutationId: operation.clientMutationId,
-					outcome: 'rejected',
-					rejectionCode: line ? 'PURCHASE_INVALID' : 'NOT_FOUND',
-				});
-				continue;
-			}
-			if (line.linkedItemId !== null) {
-				results.push({
-					clientMutationId: operation.clientMutationId,
-					outcome: 'duplicate',
-					rejectionCode: null,
-				});
-				continue;
-			}
-
-			let itemId: Id<'items'>;
-			if (operation.mode === 'existing') {
-				const item = await ctx.db.get('items', operation.itemId);
+			const goods = await ctx.db
+				.query('purchaseItems')
+				.withIndex('by_purchase', (q) => q.eq('purchaseId', purchase._id))
+				.collect();
+			const linked = [];
+			let missing = false;
+			for (const good of goods) {
+				if (good.itemId === null) continue;
+				const item = await ctx.db.get('items', good.itemId);
 				if (!item || item.spaceId !== args.spaceId) {
-					results.push({
-						clientMutationId: operation.clientMutationId,
-						outcome: 'rejected',
-						rejectionCode: 'NOT_FOUND',
-					});
-					continue;
+					missing = true;
+					break;
 				}
-				itemId = item._id;
+				linked.push({ itemId: good.itemId, quantity: good.quantity, goodId: good._id });
+			}
+			if (missing) {
+				results.push(rejected(operation.clientMutationId, 'NOT_FOUND'));
+				continue;
+			}
+
+			for (const good of linked) {
 				await restockLinked(
 					ctx,
 					args.spaceId,
-					itemId,
+					good.itemId,
 					userId,
-					operation.clientMutationId,
-					line.quantity,
+					`${operation.clientMutationId}:${good.goodId}`,
+					good.quantity,
 					operation.occurredAt,
 				);
-			} else {
-				const drafted = await runShelf(
-					draftShelfItem({
-						name: line.name,
-						category: operation.category,
-						unit: operation.unit,
-						quantity: line.quantity,
-						safetyQuantity: operation.safetyQuantity,
-						expiresOn: operation.expiresOn,
-						shelf: operation.shelf,
-					}),
-				);
-				if (isStockError(drafted)) {
-					results.push({
-						clientMutationId: operation.clientMutationId,
-						outcome: 'rejected',
-						rejectionCode: 'PURCHASE_INVALID',
-					});
-					continue;
-				}
-				itemId = await ctx.db.insert('items', {
-					spaceId: args.spaceId,
-					name: drafted.name,
-					category: drafted.category,
-					unit: drafted.unit,
-					openingQuantity: drafted.quantity,
-					quantity: drafted.quantity,
-					safetyQuantity: drafted.safetyQuantity,
-					expiresOn: drafted.expiresOn,
-					shelf: drafted.shelf,
-					version: 0,
-					createdBy: userId,
-				});
 			}
-			await ctx.db.patch('purchaseLines', line._id, { linkedItemId: itemId });
+			await ctx.db.patch('purchases', purchase._id, {
+				status: 'bought',
+				boughtBy: userId,
+				boughtAt: operation.occurredAt,
+			});
 			results.push({
 				clientMutationId: operation.clientMutationId,
 				outcome: 'applied',
@@ -502,5 +328,37 @@ export const sync = mutation({
 		}
 
 		return results;
+	},
+});
+
+/** Change how many to buy on an open trip. A bought trip keeps its quantity. */
+export const setQuantity = mutation({
+	args: {
+		spaceId: v.id('spaces'),
+		purchaseItemId: v.id('purchaseItems'),
+		quantity: v.number(),
+	},
+	returns: v.null(),
+	handler: async (ctx, args) => {
+		await requireSpaceMember(ctx, args.spaceId);
+		const drafted = await runPurchase(draftPurchaseQuantity(args.quantity));
+		if (isPurchaseError(drafted)) {
+			throw new ConvexError<AppErrorData>({
+				code: APP_ERROR_CODES.purchaseInvalid,
+				message: 'Buy a whole number from 1 to 99.',
+			});
+		}
+		const row = await ctx.db.get('purchaseItems', args.purchaseItemId);
+		if (!row || row.spaceId !== args.spaceId) throw notFound('Purchase item not found.');
+		const purchase = await ctx.db.get('purchases', row.purchaseId);
+		if (!purchase || purchase.spaceId !== args.spaceId) throw notFound('Purchase not found.');
+		if (purchase.status !== 'open') {
+			throw new ConvexError<AppErrorData>({
+				code: APP_ERROR_CODES.purchaseInvalid,
+				message: 'This trip is already bought.',
+			});
+		}
+		await ctx.db.patch('purchaseItems', row._id, { quantity: drafted });
+		return null;
 	},
 });

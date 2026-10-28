@@ -6,10 +6,12 @@ export type StockLimits = {
 	readonly soonDays: number;
 };
 
+/** Effect service the assessor reads for the "soon" window. */
 export class StockPolicy extends ServiceMap.Service<StockPolicy, StockLimits>()(
 	'@goods/domain/StockPolicy',
 ) {}
 
+/** The production window: an item expiring within three days counts as soon. */
 export const DEFAULT_STOCK_POLICY: StockLimits = {
 	soonDays: 3,
 };

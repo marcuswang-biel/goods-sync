@@ -8,6 +8,7 @@ import type { MutationCtx } from '../_generated/server';
 
 import { notFound } from './spaceAccess';
 
+/** One take the client is syncing. The fold decides whether it applies. */
 export type IncomingMovement = {
 	readonly clientMutationId: string;
 	readonly kind: 'consume' | 'restock';
@@ -17,6 +18,7 @@ export type IncomingMovement = {
 	readonly observedVersion: number;
 };
 
+/** Maps a failed stock fold onto the shared invalid-stock code. */
 function throwStock(error: StockError): never {
 	throw new ConvexError<AppErrorData>({
 		code: APP_ERROR_CODES.stockInvalid,

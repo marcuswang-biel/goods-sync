@@ -2,9 +2,10 @@ import { useLingui } from '@lingui/react/macro';
 import { createFileRoute } from '@tanstack/react-router';
 
 import { RequireAuth } from '@/components/require-auth';
+import { useActiveSpace } from '@/features/space/space';
 import { Board } from '@/features/stock/board';
-import { useActiveSpace } from '@/features/stock/space';
 
+/** Board route. Signed-out visits are sent to sign in. */
 export const Route = createFileRoute('/')({
 	component: () => (
 		<RequireAuth>
@@ -13,6 +14,7 @@ export const Route = createFileRoute('/')({
 	),
 });
 
+/** The board for the account's one place. */
 function Overview() {
 	const { t } = useLingui();
 	const { active, isPending, isError } = useActiveSpace();

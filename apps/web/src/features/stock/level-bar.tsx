@@ -1,29 +1,53 @@
-/** Remaining quantity against the safety line. The track ends at whichever is larger. */
+/** Share of the safety line still on the shelf. Above the line this passes 100. */
+export function remainingPercent(quantity: number, safetyQuantity: number): number {
+	if (safetyQuantity <= 0) return quantity > 0 ? 100 : 0;
+	return Math.round((quantity / safetyQuantity) * 100);
+}
+
+/**
+ * Gray is the safety line, always the full length. Black covers it up to that
+ * line and stops at 100, even when more than the line is on the shelf.
+ */
 export function LevelBar({
 	quantity,
 	safetyQuantity,
+	className = 'w-40 shrink-0',
 }: {
 	quantity: number;
 	safetyQuantity: number;
+	className?: string;
 }) {
-	const scale = Math.max(quantity, safetyQuantity, 1);
-	const fill = (quantity / scale) * 100;
-	const short = quantity <= safetyQuantity;
-	const mark =
-		quantity > safetyQuantity && safetyQuantity > 0 ? (safetyQuantity / scale) * 100 : null;
+	const ratio = safetyQuantity > 0 ? quantity / safetyQuantity : quantity > 0 ? 1 : 0;
+	const covered = Math.min(ratio, 1) * 100;
 
 	return (
-		<span className="relative inline-block h-2 w-24 shrink-0 bg-[#e6e6e6]" aria-hidden="true">
-			<span
-				className="absolute inset-y-0 left-0"
-				style={{
-					width: `${fill}%`,
-					background: quantity === 0 ? 'transparent' : short ? '#1d5fbf' : '#0a0a0a',
-				}}
-			/>
-			{mark !== null && (
-				<span className="absolute inset-y-0 w-0.5 bg-[#f2f4f7]" style={{ left: `${mark}%` }} />
-			)}
+		<div className={`relative h-2 ${className}`} aria-hidden="true">
+			<div className="absolute inset-0 bg-[#d4d4d4]" />
+			<div className="absolute inset-y-0 left-0 bg-[#0a0a0a]" style={{ width: `${covered}%` }} />
+		</div>
+	);
+}
+
+/** Quantity, a rule, then the percent of the safety line. The slots stay left-aligned across rows. */
+export function StockAmount({
+	quantity,
+	unit,
+	safetyQuantity,
+	className = '',
+}: {
+	quantity: number;
+	unit: string;
+	safetyQuantity: number;
+	className?: string;
+}) {
+	return (
+		<span className={`inline-flex shrink-0 items-center gap-2 text-sm tabular-nums ${className}`}>
+			<span className="w-16 text-left">
+				{quantity}
+				<span className="ml-1 text-xs text-[#6b6b6b]">{unit}</span>
+			</span>
+			<span className="h-4 w-px shrink-0 bg-[#d4d4d4]" aria-hidden="true" />
+			<span className="text-left">{remainingPercent(quantity, safetyQuantity)}%</span>
 		</span>
 	);
 }

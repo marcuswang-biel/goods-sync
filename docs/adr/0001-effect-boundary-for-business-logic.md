@@ -18,7 +18,7 @@ Convex handlers mix four jobs: authorization, reads, the business decision and w
    5. writes the result.
 4. Rules are tested with `@effect/vitest` against a test `Layer`. The handler is tested with convex-test for authorization, reads, writes and the error-code mapping.
 
-The reference implementation is `packages/domain/src/stock/` (the shelf rules and the offline fold) and `packages/backend/convex/stock.ts` (`sync`).
+The reference implementation is `packages/domain/src/stock/` (the shelf rules and the fold) and `packages/backend/convex/stock.ts` (`sync`). Purchases live in `packages/domain/src/purchase/`. The phone queue lives in `packages/domain/src/offline/`.
 
 ## Consequences
 

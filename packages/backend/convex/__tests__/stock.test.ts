@@ -6,11 +6,13 @@ import { APP_ERROR_CODES } from '@goods/shared/error-codes';
 import { describe, expect, it } from 'vitest';
 
 import { convexTest, signIn } from '../../test/harness';
-import { api } from '../_generated/api';
+import { api, internal } from '../_generated/api';
 import schema from '../schema';
 
+/** Convex modules the stock tests load. Tests themselves are excluded. */
 const modules = import.meta.glob(['../**/*.ts', '../**/*.js', '!../**/*.d.ts', '!../**/*.test.ts']);
 
+/** Reads the app error code from a call that is expected to throw. */
 async function codeOf(promise: Promise<unknown>) {
 	try {
 		await promise;
@@ -20,8 +22,10 @@ async function codeOf(promise: Promise<unknown>) {
 	throw new Error('expected the call to fail');
 }
 
+/** Fixed day the stock tests classify against. */
 const today = '2026-10-28';
 
+/** Inserts a place and two members, and returns the ids the stock tests use. */
 async function shelf(
 	t: ReturnType<typeof convexTest>,
 	ownerId: string,
@@ -33,7 +37,6 @@ async function shelf(
 			name: kind === 'office' ? '公司茶水間' : '我的合租房',
 			kind,
 			createdBy: ownerId,
-			budgetCents: kind === 'office' ? 80_000 : null,
 			createdAt: Date.now(),
 		});
 		await ctx.db.insert('memberships', {
@@ -87,7 +90,6 @@ describe('stock', () => {
 			name: '咖啡豆',
 			quantity: 1,
 			supply: 'low',
-			shortfall: 1,
 		});
 	});
 
@@ -188,28 +190,44 @@ describe('shelf', () => {
 });
 
 describe('purchases', () => {
-	it('splits a household line and restocks the linked item', async () => {
+	it('records one household total and restocks every good', async () => {
 		const t = convexTest(schema, modules);
 		const alice = await signIn(t, 'alice@example.com');
 		const bob = await signIn(t, 'bob@example.com');
 		const { spaceId, itemId } = await shelf(t, alice.userId, bob.userId, 'household');
+		const tissueId = await t.run(async (ctx) =>
+			ctx.db.insert('items', {
+				spaceId,
+				name: '衛生紙',
+				category: 'tissue',
+				unit: 'roll',
+				openingQuantity: 0,
+				quantity: 0,
+				safetyQuantity: 4,
+				expiresOn: null,
+				shelf: 'washroom',
+				version: 0,
+				createdBy: alice.userId,
+			}),
+		);
 
 		const added = await alice.as.mutation(api.purchases.sync, {
 			spaceId,
 			ops: [
 				{
 					tag: 'add',
-					clientMutationId: 'line-milk',
-					name: '  全脂牛奶  ',
-					quantity: 2,
-					estimatedCents: 4_800,
-					linkedItemId: itemId,
+					clientMutationId: 'trip-1',
+					totalCents: 6_600,
 					occurredAt: 10,
+					items: [
+						{ itemId, quantity: 2 },
+						{ itemId: tissueId, quantity: 4 },
+					],
 				},
 			],
 		});
 		expect(added).toEqual([
-			{ clientMutationId: 'line-milk', outcome: 'applied', rejectionCode: null },
+			{ clientMutationId: 'trip-1', outcome: 'applied', rejectionCode: null },
 		]);
 
 		const bought = await alice.as.mutation(api.purchases.sync, {
@@ -217,44 +235,55 @@ describe('purchases', () => {
 			ops: [
 				{
 					tag: 'buy',
-					clientMutationId: 'buy-milk',
-					lineClientMutationId: 'line-milk',
+					clientMutationId: 'buy-1',
+					purchaseClientMutationId: 'trip-1',
 					occurredAt: 20,
 				},
 			],
 		});
 		expect(bought[0]?.outcome).toBe('applied');
 
-		const list = await bob.as.query(api.purchases.list, { spaceId });
-		expect(list.lines[0]).toMatchObject({
-			status: 'bought',
-			name: '全脂牛奶',
-			perPersonCents: 2_400,
-			remainderCents: 0,
+		const again = await alice.as.mutation(api.purchases.sync, {
+			spaceId,
+			ops: [
+				{
+					tag: 'buy',
+					clientMutationId: 'buy-1-again',
+					purchaseClientMutationId: 'trip-1',
+					occurredAt: 30,
+				},
+			],
 		});
+		expect(again[0]?.outcome).toBe('duplicate');
+
+		const list = await bob.as.query(api.purchases.list, { spaceId });
+		expect(list.purchases[0]).toMatchObject({
+			status: 'bought',
+			totalCents: 6_600,
+		});
+		expect(list.purchases[0]?.items).toEqual([
+			expect.objectContaining({ name: '咖啡豆', quantity: 2, unit: 'bag' }),
+			expect.objectContaining({ name: '衛生紙', quantity: 4, unit: 'roll' }),
+		]);
 		const board = await bob.as.query(api.stock.board, { spaceId, today });
-		expect(board.items[0]?.quantity).toBe(3);
+		expect(board.items.find((item) => item._id === itemId)?.quantity).toBe(3);
+		expect(board.items.find((item) => item._id === tissueId)?.quantity).toBe(4);
 	});
 
-	it('refuses an office line the department budget cannot cover', async () => {
+	it('records an office total and restocks the shelf', async () => {
 		const t = convexTest(schema, modules);
 		const alice = await signIn(t, 'alice@example.com');
 		const { spaceId, itemId } = await shelf(t, alice.userId, alice.userId, 'office');
-		await t.run(async (ctx) => {
-			await ctx.db.patch('spaces', spaceId, { budgetCents: 100 });
-		});
 
 		await alice.as.mutation(api.purchases.sync, {
 			spaceId,
 			ops: [
 				{
 					tag: 'add',
-					clientMutationId: 'line-coffee',
-					name: '咖啡豆',
-					quantity: 2,
-					estimatedCents: 200,
-					linkedItemId: itemId,
+					clientMutationId: 'trip-coffee',
+					totalCents: 200,
 					occurredAt: 10,
+					items: [{ itemId, quantity: 2 }],
 				},
 			],
 		});
@@ -264,125 +293,132 @@ describe('purchases', () => {
 				{
 					tag: 'buy',
 					clientMutationId: 'buy-coffee',
-					lineClientMutationId: 'line-coffee',
+					purchaseClientMutationId: 'trip-coffee',
 					occurredAt: 20,
 				},
 			],
 		});
-		expect(bought[0]).toMatchObject({ outcome: 'rejected', rejectionCode: 'BUDGET_EXCEEDED' });
+		expect(bought[0]).toMatchObject({ outcome: 'applied', rejectionCode: null });
 		const list = await alice.as.query(api.purchases.list, { spaceId });
-		expect(list.budgetCents).toBe(100);
-		expect(list.lines[0]?.status).toBe('open');
-		expect(list.lines[0]?.fitsBudget).toBe(false);
+		expect(list.purchases[0]).toMatchObject({
+			status: 'bought',
+			totalCents: 200,
+		});
+		const board = await alice.as.query(api.stock.board, { spaceId, today });
+		expect(board.items[0]?.quantity).toBe(3);
 	});
 
-	it('stocks an unlinked purchase onto an existing shelf item', async () => {
+	it('folds open per-good lines into one purchase', async () => {
 		const t = convexTest(schema, modules);
 		const alice = await signIn(t, 'alice@example.com');
 		const { spaceId, itemId } = await shelf(t, alice.userId, alice.userId, 'household');
-
-		await alice.as.mutation(api.purchases.sync, {
-			spaceId,
-			ops: [
-				{
-					tag: 'add',
-					clientMutationId: 'line-beans',
-					name: '咖啡豆',
-					quantity: 2,
-					estimatedCents: 1_200,
-					linkedItemId: null,
-					occurredAt: 10,
-				},
-				{
-					tag: 'buy',
-					clientMutationId: 'buy-beans',
-					lineClientMutationId: 'line-beans',
-					occurredAt: 20,
-				},
-			],
+		await t.run(async (ctx) => {
+			await ctx.db.insert('purchaseLines', {
+				spaceId,
+				clientMutationId: 'old-milk',
+				name: '全脂牛奶',
+				quantity: 2,
+				estimatedCents: 4_800,
+				linkedItemId: itemId,
+				status: 'open',
+				createdBy: alice.userId,
+				createdAt: 10,
+				boughtBy: null,
+				boughtAt: null,
+			});
+			await ctx.db.insert('purchaseLines', {
+				spaceId,
+				clientMutationId: 'old-soy',
+				name: '醬油',
+				quantity: 1,
+				estimatedCents: 1_800,
+				linkedItemId: null,
+				status: 'open',
+				createdBy: alice.userId,
+				createdAt: 11,
+				boughtBy: null,
+				boughtAt: null,
+			});
 		});
 
-		const received = await alice.as.mutation(api.purchases.sync, {
-			spaceId,
-			ops: [
-				{
-					tag: 'receive',
-					mode: 'existing',
-					clientMutationId: 'receive-beans',
-					lineClientMutationId: 'line-beans',
-					occurredAt: 30,
-					itemId,
-				},
-			],
-		});
-		expect(received[0]).toMatchObject({ outcome: 'applied', rejectionCode: null });
+		await t.mutation(internal.migrations.foldPurchaseLines, {});
+		await t.mutation(internal.migrations.foldPurchaseLines, {});
 
-		const again = await alice.as.mutation(api.purchases.sync, {
-			spaceId,
-			ops: [
-				{
-					tag: 'receive',
-					mode: 'existing',
-					clientMutationId: 'receive-beans-again',
-					lineClientMutationId: 'line-beans',
-					occurredAt: 40,
-					itemId,
-				},
-			],
-		});
-		expect(again[0]?.outcome).toBe('duplicate');
-
-		const board = await alice.as.query(api.stock.board, { spaceId, today });
-		expect(board.items.find((item) => item._id === itemId)?.quantity).toBe(3);
+		const list = await alice.as.query(api.purchases.list, { spaceId });
+		expect(list.purchases).toHaveLength(1);
+		expect(list.purchases[0]).toMatchObject({ status: 'open', totalCents: 6_600 });
+		expect(list.purchases[0]?.items).toEqual([
+			expect.objectContaining({ name: '全脂牛奶', quantity: 2, itemId }),
+			expect.objectContaining({ name: '醬油', quantity: 1, itemId: null }),
+		]);
 	});
+});
 
-	it('opens a new shelf item from a bought line', async () => {
+describe('stock.remove', () => {
+	it('drops the good and its takes, and keeps the purchase name', async () => {
 		const t = convexTest(schema, modules);
 		const alice = await signIn(t, 'alice@example.com');
-		const { spaceId } = await shelf(t, alice.userId, alice.userId, 'household');
+		const stranger = await signIn(t, 'cara@example.com');
+		const { spaceId, itemId } = await shelf(t, alice.userId, alice.userId, 'household');
+		await t.run(async (ctx) => {
+			await ctx.db.insert('movements', {
+				spaceId,
+				itemId,
+				clientMutationId: 'take-1',
+				kind: 'consume',
+				quantity: 1,
+				actorId: alice.userId,
+				observedVersion: 0,
+				occurredAt: 20,
+				causalParentClientId: null,
+				outcome: 'applied',
+				rejectionCode: null,
+			});
+			const purchaseId = await ctx.db.insert('purchases', {
+				spaceId,
+				clientMutationId: 'trip-1',
+				totalCents: 4_800,
+				status: 'open',
+				createdBy: alice.userId,
+				createdAt: 10,
+				boughtBy: null,
+				boughtAt: null,
+			});
+			await ctx.db.insert('purchaseItems', {
+				purchaseId,
+				spaceId,
+				itemId,
+				name: '咖啡豆',
+				unit: 'bag',
+				quantity: 1,
+			});
+		});
 
-		await alice.as.mutation(api.purchases.sync, {
+		expect(await codeOf(stranger.as.mutation(api.stock.remove, { spaceId, itemId }))).toBe(
+			APP_ERROR_CODES.notFound,
+		);
+
+		expect(await alice.as.mutation(api.stock.remove, { spaceId, itemId })).toBeNull();
+		const board = await alice.as.query(api.stock.board, { spaceId, today });
+		expect(board.items).toEqual([]);
+		expect(board.movements).toEqual([]);
+
+		const list = await alice.as.query(api.purchases.list, { spaceId });
+		expect(list.purchases[0]?.items).toEqual([
+			expect.objectContaining({ name: '咖啡豆', itemId: null, quantity: 1 }),
+		]);
+		const bought = await alice.as.mutation(api.purchases.sync, {
 			spaceId,
 			ops: [
 				{
-					tag: 'add',
-					clientMutationId: 'line-soda',
-					name: '梳打水',
-					quantity: 4,
-					estimatedCents: 2_000,
-					linkedItemId: null,
-					occurredAt: 10,
-				},
-				{
 					tag: 'buy',
-					clientMutationId: 'buy-soda',
-					lineClientMutationId: 'line-soda',
-					occurredAt: 20,
-				},
-				{
-					tag: 'receive',
-					mode: 'new',
-					clientMutationId: 'receive-soda',
-					lineClientMutationId: 'line-soda',
+					clientMutationId: 'buy-1',
+					purchaseClientMutationId: 'trip-1',
 					occurredAt: 30,
-					category: 'drink',
-					unit: 'can',
-					safetyQuantity: 2,
-					expiresOn: '2026-12-01',
-					shelf: 'fridge',
 				},
 			],
 		});
-
-		const board = await alice.as.query(api.stock.board, { spaceId, today });
-		expect(board.items.find((item) => item.name === '梳打水')).toMatchObject({
-			quantity: 4,
-			unit: 'can',
-			category: 'drink',
-			safetyQuantity: 2,
-		});
-		const list = await alice.as.query(api.purchases.list, { spaceId });
-		expect(list.lines[0]?.linkedItemId).not.toBeNull();
+		expect(bought[0]).toMatchObject({ outcome: 'applied', rejectionCode: null });
 	});
 });
 

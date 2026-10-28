@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { PurchaseScreen } from '@/components/purchase-screen';
 
+/** Phone purchases, with a link back to the shelf. */
 export default function PurchasesRoute() {
 	return (
 		<View style={styles.page}>
@@ -14,6 +15,7 @@ export default function PurchasesRoute() {
 	);
 }
 
+/** Layout for the phone purchases screen. */
 const styles = StyleSheet.create({
 	page: { flex: 1, backgroundColor: '#f2f4f7' },
 	tab: {

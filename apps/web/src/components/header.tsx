@@ -1,14 +1,14 @@
 import { Button } from '@goods/web-ui';
 import { Trans, useLingui } from '@lingui/react/macro';
-import { Link, useNavigate } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 import { useConvexAuth } from 'convex/react';
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 
 import { useSignOut } from '@/auth';
-import { useActiveSpace } from '@/features/stock/space';
 
 import { LocaleSwitcher } from './locale-switcher';
 
+/** Wordmark bars. Decorative; the link text is the name. */
 function Mark() {
 	return (
 		<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" className="shrink-0">
@@ -17,23 +17,17 @@ function Mark() {
 	);
 }
 
+/** Nav link when the route is not current. */
 const linkClass = 'text-sm text-[#6b6b6b] hover:text-[#0a0a0a]';
+/** Nav link on the current route. */
 const activeLinkClass = 'text-sm text-[#0a0a0a]';
 
+/** App chrome: board, shelf, and purchases. The place is not switched here. */
 export default function Header() {
 	const { isAuthenticated } = useConvexAuth();
-	const { spaces, active, select } = useActiveSpace(isAuthenticated);
 	const signOut = useSignOut();
-	const navigate = useNavigate();
 	const { t } = useLingui();
 	const [menuOpen, setMenuOpen] = useState(false);
-	const [query, setQuery] = useState('');
-
-	const submitSearch = (event: FormEvent<HTMLFormElement>) => {
-		event.preventDefault();
-		void navigate({ to: '/stock', search: { q: query.trim() } });
-		setMenuOpen(false);
-	};
 
 	return (
 		<header className="border-b border-[#e6e6e6] bg-[#f2f4f7]">
@@ -71,40 +65,6 @@ export default function Header() {
 					</nav>
 				)}
 				<div className="ml-auto flex items-center gap-2">
-					{isAuthenticated && (
-						<form onSubmit={submitSearch} className="hidden md:block">
-							<label htmlFor="shelf-search" className="sr-only">
-								<Trans>搜尋物資</Trans>
-							</label>
-							<input
-								id="shelf-search"
-								value={query}
-								onChange={(event) => setQuery(event.target.value)}
-								className="h-9 w-56 rounded-[6px] border border-[#d4d4d4] bg-white px-3 text-sm"
-							/>
-						</form>
-					)}
-					{isAuthenticated && active && (
-						<label className="hidden items-center md:flex">
-							<span className="sr-only">
-								<Trans>空間</Trans>
-							</span>
-							<select
-								className="h-9 rounded-[6px] border border-[#d4d4d4] bg-white px-2 text-sm"
-								value={active._id}
-								onChange={(event) => {
-									const next = spaces.find((space) => space._id === event.target.value);
-									if (next) select(next._id);
-								}}
-							>
-								{spaces.map((space) => (
-									<option key={space._id} value={space._id}>
-										{space.name}
-									</option>
-								))}
-							</select>
-						</label>
-					)}
 					<LocaleSwitcher />
 					{isAuthenticated && (
 						<Button
@@ -154,23 +114,6 @@ export default function Header() {
 							<Trans>採購</Trans>
 						</Link>
 					</nav>
-					{active && (
-						<select
-							className="mt-2 h-11 w-full rounded-[6px] border border-[#d4d4d4] bg-white px-2 text-sm"
-							aria-label={t`空間`}
-							value={active._id}
-							onChange={(event) => {
-								const next = spaces.find((space) => space._id === event.target.value);
-								if (next) select(next._id);
-							}}
-						>
-							{spaces.map((space) => (
-								<option key={space._id} value={space._id}>
-									{space.name}
-								</option>
-							))}
-						</select>
-					)}
 					<button
 						type="button"
 						className="mt-2 flex h-11 items-center text-sm"

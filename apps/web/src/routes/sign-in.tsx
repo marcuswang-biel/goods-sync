@@ -5,10 +5,12 @@ import { useConvexAuth } from 'convex/react';
 import { SignInPanel } from '@/auth';
 import Loader from '@/components/loader';
 
+/** Sign-in route. */
 export const Route = createFileRoute('/sign-in')({
 	component: SignInPage,
 });
 
+/** Sign-in form. An existing session goes straight to the board. */
 function SignInPage() {
 	const { isAuthenticated, isLoading } = useConvexAuth();
 	if (isLoading) return <Loader />;
@@ -20,10 +22,6 @@ function SignInPage() {
 				<h1 className="text-[24px] leading-none font-medium">
 					<Trans>登入物資</Trans>
 				</h1>
-				<p className="mt-3 text-sm/6">
-					<Trans>凱是 dev@example.com，阿澄是 roommate@example.com，密碼都是 devpassword。</Trans>
-					{/* taste-skill-ignore */}
-				</p>
 				<div className="mt-6">
 					<SignInPanel />
 				</div>

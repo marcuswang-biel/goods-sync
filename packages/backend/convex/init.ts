@@ -15,6 +15,7 @@ import { v } from 'convex/values';
 import { internal } from './_generated/api';
 import { internalAction } from './_generated/server';
 
+/** What `convex run init` returns. Skipped when this is not a local debug backend. */
 type SeedResult = { status: 'seeded' | 'skipped'; email: string | null };
 
 export default internalAction({

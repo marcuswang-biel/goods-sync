@@ -1,9 +1,11 @@
 import { Effect, Schema } from 'effect';
 
-import { InvalidStock } from './errors';
+import { InvalidStock } from '../stock/errors';
 
+/** Shared id shape for queued operations and the shelf items they name. */
 const Id = Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(80));
 
+/** A take or restock waiting on the phone. */
 const MovementOperation = Schema.Struct({
 	tag: Schema.Literals(['movement']),
 	clientMutationId: Id,
@@ -15,6 +17,7 @@ const MovementOperation = Schema.Struct({
 	causalParentClientId: Schema.NullOr(Id),
 });
 
+/** A shop line typed in the aisle, still only on the phone. */
 const PurchaseAddOperation = Schema.Struct({
 	tag: Schema.Literals(['purchase-add']),
 	clientMutationId: Id,
@@ -24,6 +27,7 @@ const PurchaseAddOperation = Schema.Struct({
 	occurredAt: Schema.Int.check(Schema.isGreaterThan(0)),
 });
 
+/** A "bought it" check waiting to be sent. `lineClientMutationId` names the trip. */
 const PurchaseBuyOperation = Schema.Struct({
 	tag: Schema.Literals(['purchase-buy']),
 	clientMutationId: Id,
@@ -31,16 +35,20 @@ const PurchaseBuyOperation = Schema.Struct({
 	occurredAt: Schema.Int.check(Schema.isGreaterThan(0)),
 });
 
+/** Anything the phone may store while it cannot reach the server. */
 export const OfflineOperation = Schema.Union([
 	MovementOperation,
 	PurchaseAddOperation,
 	PurchaseBuyOperation,
 ]);
 
+/** A validated offline operation. */
 export type OfflineOperation = typeof OfflineOperation.Type;
 
+/** The stored list of offline operations. */
 const Queue = Schema.Array(OfflineOperation);
 
+/** A take the phone wants to append. The causal parent is filled in by the queue. */
 const MovementRequest = Schema.Struct({
 	clientMutationId: Id,
 	itemId: Id,
@@ -50,6 +58,7 @@ const MovementRequest = Schema.Struct({
 	observedVersion: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
 });
 
+/** A shop line the phone wants to append. */
 const PurchaseAddRequest = Schema.Struct({
 	clientMutationId: Id,
 	name: Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(80)),
@@ -58,14 +67,17 @@ const PurchaseAddRequest = Schema.Struct({
 	occurredAt: Schema.Int.check(Schema.isGreaterThan(0)),
 });
 
+/** A "bought it" check the phone wants to append. */
 const PurchaseBuyRequest = Schema.Struct({
 	clientMutationId: Id,
 	lineClientMutationId: Id,
 	occurredAt: Schema.Int.check(Schema.isGreaterThan(0)),
 });
 
+/** Client ids the server has already answered. */
 const IdList = Schema.Array(Id);
 
+/** Reads a stored queue. A bad payload is a stock error, not a thrown exception. */
 function decodeQueue(queue: unknown) {
 	return Schema.decodeUnknownEffect(Queue)(queue).pipe(
 		Effect.mapError((error) => new InvalidStock({ reason: error.message })),

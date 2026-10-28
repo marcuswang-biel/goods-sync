@@ -1,3 +1,4 @@
+/** `YYYY-MM-DD`. Whether that day exists is checked in `isRealIsoDate`. */
 const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 /** True when `value` is a real calendar day, not only a well-shaped string. */

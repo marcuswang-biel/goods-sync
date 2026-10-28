@@ -8,8 +8,10 @@ export const spaceKindValidator = v.union(
 	v.literal('office'),
 );
 
+/** Who a member is inside a place. */
 export const memberRoleValidator = v.union(v.literal('admin'), v.literal('member'));
 
+/** What kind of good this is. Clients translate the label. */
 export const itemCategoryValidator = v.union(
 	v.literal('snack'),
 	v.literal('coffee'),
@@ -26,6 +28,7 @@ export const itemCategoryValidator = v.union(
 	v.literal('care'),
 );
 
+/** How the quantity is counted. Clients translate the label. */
 export const itemUnitValidator = v.union(
 	v.literal('carton'),
 	v.literal('slab'),
@@ -37,6 +40,7 @@ export const itemUnitValidator = v.union(
 	v.literal('piece'),
 );
 
+/** Where the good sits. Clients translate the label. */
 export const shelfValidator = v.union(
 	v.literal('fridge'),
 	v.literal('tearoom'),
@@ -46,6 +50,7 @@ export const shelfValidator = v.union(
 	v.literal('printroom'),
 );
 
+/** Stored copy of the domain freshness classification. */
 export const freshnessValidator = v.union(
 	v.literal('undated'),
 	v.literal('ok'),
@@ -53,18 +58,23 @@ export const freshnessValidator = v.union(
 	v.literal('expired'),
 );
 
+/** Stored copy of the domain supply classification. */
 export const supplyValidator = v.union(v.literal('ok'), v.literal('low'), v.literal('out'));
 
+/** A take that removes stock, or a buy that puts it back. */
 export const movementKindValidator = v.union(v.literal('consume'), v.literal('restock'));
 
+/** Whether a take was applied or rejected by the fold. */
 export const outcomeValidator = v.union(v.literal('applied'), v.literal('rejected'));
 
+/** Why a take was rejected. Null when it was applied. */
 export const rejectionCodeValidator = v.union(
 	v.literal('INSUFFICIENT_STOCK'),
 	v.literal('CAUSAL_CYCLE'),
 	v.null(),
 );
 
+/** A trip still being shopped, or one already checked off. */
 export const purchaseStatusValidator = v.union(v.literal('open'), v.literal('bought'));
 
 export default defineSchema({
@@ -77,10 +87,10 @@ export default defineSchema({
 		name: v.string(),
 		kind: spaceKindValidator,
 		createdBy: v.string(),
-		budgetCents: v.union(v.number(), v.null()),
 		createdAt: v.number(),
 	}).index('by_createdAt', ['createdAt']),
 
+	/** A person in a place. `userId` is the auth subject. */
 	memberships: defineTable({
 		spaceId: v.id('spaces'),
 		userId: v.string(),
@@ -110,6 +120,7 @@ export default defineSchema({
 		createdBy: v.string(),
 	}).index('by_space', ['spaceId']),
 
+	/** One take. Replayed in order to produce `items.quantity`. */
 	movements: defineTable({
 		spaceId: v.id('spaces'),
 		itemId: v.id('items'),
@@ -126,6 +137,37 @@ export default defineSchema({
 		.index('by_item', ['itemId'])
 		.index('by_item_and_client', ['itemId', 'clientMutationId']),
 
+	/** One shopping trip. The money is a single total, not a price per good. */
+	purchases: defineTable({
+		spaceId: v.id('spaces'),
+		clientMutationId: v.string(),
+		totalCents: v.number(),
+		status: purchaseStatusValidator,
+		createdBy: v.string(),
+		createdAt: v.number(),
+		boughtBy: v.union(v.string(), v.null()),
+		boughtAt: v.union(v.number(), v.null()),
+	})
+		.index('by_space', ['spaceId'])
+		.index('by_space_and_client', ['spaceId', 'clientMutationId']),
+
+	/** A good on a trip. `itemId` is null after that good is deleted; the name stays. */
+	purchaseItems: defineTable({
+		purchaseId: v.id('purchases'),
+		spaceId: v.id('spaces'),
+		itemId: v.union(v.id('items'), v.null()),
+		name: v.string(),
+		unit: v.union(itemUnitValidator, v.null()),
+		quantity: v.number(),
+	})
+		.index('by_purchase', ['purchaseId'])
+		.index('by_space', ['spaceId']),
+
+	/**
+	 * Previous shape: one good and its own price. Kept so `foldPurchaseLines`
+	 * can copy rows into `purchases`. Drop it in a later deploy, after that
+	 * fold has run.
+	 */
 	purchaseLines: defineTable({
 		spaceId: v.id('spaces'),
 		clientMutationId: v.string(),
@@ -138,9 +180,6 @@ export default defineSchema({
 		createdAt: v.number(),
 		boughtBy: v.union(v.string(), v.null()),
 		boughtAt: v.union(v.number(), v.null()),
-		perPersonCents: v.union(v.number(), v.null()),
-		remainderCents: v.union(v.number(), v.null()),
-		departmentChargeCents: v.union(v.number(), v.null()),
 	})
 		.index('by_space', ['spaceId'])
 		.index('by_space_and_client', ['spaceId', 'clientMutationId']),

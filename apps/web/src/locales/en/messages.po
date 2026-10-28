@@ -13,203 +13,159 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/routes/purchases.tsx:174
-msgid " · 已採購"
-msgstr " · bought"
-
-#: src/routes/purchases.tsx:175
-msgid " · 預算不夠"
-msgstr " · over budget"
-
 #. placeholder {0}: items.length
-#: src/routes/stock.tsx:86
+#: src/routes/stock.tsx:114
 msgid "{0} 樣"
 msgstr "{0} items"
 
-#. placeholder {0}: lead.name
-#: src/features/stock/board.tsx:111
-msgid "{attentionCount} 樣要處理，最先是 {0}。"
-msgstr "{attentionCount} to handle. First is {0}."
-
-#: src/routes/purchases.tsx:331
-msgid "一次最多建立 40 筆。"
-msgstr "At most 40 lines at once."
-
-#: src/features/stock/board.tsx:133
-#: src/features/stock/board.tsx:150
-#: src/features/stock/board.tsx:302
-#: src/features/stock/board.tsx:354
+#: src/features/stock/board.tsx:241
 msgid "一鍵採購"
 msgstr "Buy the shortfall"
 
-#: src/features/stock/board.tsx:275
+#: src/features/stock/board.tsx:207
 msgid "三天內沒有要到期的物資。"
 msgstr "Nothing expires in the next three days."
 
-#: src/features/stock/board.tsx:166
-#: src/features/stock/board.tsx:278
-#: src/routes/stock.tsx:138
+#: src/routes/purchases.tsx:188
+msgid "上一頁"
+msgstr "Previous"
+
+#: src/routes/purchases.tsx:212
+msgid "下一頁"
+msgstr "Next"
+
+#: src/features/stock/board.tsx:210
+#: src/routes/stock.tsx:179
 msgid "不夠了"
 msgstr "Running short"
 
-#: src/routes/purchases.tsx:252
-msgid "不連庫存"
-msgstr "Not linked to stock"
-
-#: src/features/stock/labels.ts:41
+#: src/features/stock/labels.ts:36
 msgid "主食"
 msgstr "Staple"
 
-#: src/features/stock/labels.ts:17
+#: src/features/stock/labels.ts:10
 msgid "令"
 msgstr "Ream"
 
-#: src/routes/purchases.tsx:351
+#: src/routes/purchases.tsx:386
 msgid "低於安全警戒"
 msgstr "Under the safety line"
 
-#: src/routes/index.tsx:30
-#: src/routes/purchases.tsx:31
-#: src/routes/stock.tsx:39
+#: src/routes/index.tsx:32
+#: src/routes/purchases.tsx:36
+#: src/routes/stock.tsx:43
 msgid "你還沒有加入任何空間。"
 msgstr "You are not in a space yet."
 
-#: src/features/stock/labels.ts:19
+#: src/features/stock/labels.ts:12
 msgid "個"
 msgstr "Piece"
 
-#: src/routes/purchases.tsx:464
-msgid "先選一項貨架上的貨物。"
-msgstr "Pick a good already on the shelf."
-
-#: src/routes/purchases.tsx:246
-msgid "入到哪一項庫存"
-msgstr "Restock which item"
-
-#: src/routes/purchases.tsx:522
-msgid "入到哪裡"
-msgstr "Stock into"
-
-#: src/routes/purchases.tsx:518
-#: src/routes/purchases.tsx:625
-msgid "入庫"
-msgstr "Stock"
-
-#: src/features/stock/board.tsx:240
+#: src/features/stock/board.tsx:172
 msgid "最近的領用"
 msgstr "Recent takes"
 
-#: src/features/stock/board.tsx:327
-msgid "最長的條是差 {max}。"
-msgstr "The longest bar is short by {max}."
-
-#: src/features/stock/labels.ts:23
+#: src/features/stock/labels.ts:17
 msgid "冰箱"
 msgstr "Fridge"
 
-#: src/features/stock/labels.ts:43
+#: src/features/stock/labels.ts:38
 msgid "冷凍"
 msgstr "Frozen"
 
-#: src/routes/sign-in.tsx:24
-msgid "凱是 dev@example.com，阿澄是 roommate@example.com，密碼都是 devpassword。"
-msgstr "Kai is dev@example.com, Cheng is roommate@example.com, and the password is devpassword."
+#: src/features/stock/remove-dialog.tsx:49
+#: src/routes/stock.tsx:225
+#: src/routes/stock.tsx:272
+msgid "刪除"
+msgstr "Delete"
 
-#: src/routes/purchases.tsx:596
-#: src/routes/stock.tsx:117
-#: src/routes/stock.tsx:358
+#. placeholder {0}: item.name
+#: src/routes/stock.tsx:222
+#: src/routes/stock.tsx:269
+msgid "刪除 {0}"
+msgstr "Delete {0}"
+
+#: src/routes/stock.tsx:158
+#: src/routes/stock.tsx:445
 msgid "到期"
 msgstr "Expires"
 
-#: src/routes/purchases.tsx:265
-msgid "加入清單"
-msgstr "Add to the list"
-
-#: src/features/stock/labels.ts:14
+#: src/features/stock/labels.ts:7
 msgid "包"
 msgstr "Bag"
 
-#: src/features/stock/labels.ts:15
+#: src/features/stock/board.tsx:204
+#: src/routes/stock.tsx:174
+msgid "即將過期"
+msgstr "Expiring soon"
+
+#: src/features/stock/labels.ts:8
 msgid "卷"
 msgstr "Roll"
 
-#: src/features/stock/labels.ts:6
-msgid "合租"
-msgstr "Flat"
+#: src/features/stock/remove-dialog.tsx:41
+msgid "取消"
+msgstr "Cancel"
 
-#: src/features/stock/labels.ts:7
-msgid "同居"
-msgstr "Home"
-
-#: src/auth/sign-in-panel.tsx:38
-#: src/routes/purchases.tsx:219
-#: src/routes/stock.tsx:297
+#: src/auth/sign-in-panel.tsx:40
+#: src/routes/stock.tsx:384
 msgid "名稱"
 msgstr "Name"
 
-#: src/features/stock/labels.ts:33
+#: src/features/stock/labels.ts:28
 msgid "咖啡"
 msgstr "Coffee"
 
-#: src/features/stock/board.tsx:167
-#: src/routes/stock.tsx:111
+#: src/routes/stock.tsx:152
 msgid "在架上"
 msgstr "On the shelf"
 
-#: src/features/stock/labels.ts:35
+#: src/routes/stock.tsx:380
+msgid "增加新物資"
+msgstr "Add a new good"
+
+#: src/features/stock/labels.ts:30
 msgid "奶類"
 msgstr "Dairy"
 
-#: src/routes/stock.tsx:114
+#: src/routes/stock.tsx:155
 msgid "安全"
 msgstr "Safety"
 
-#: src/routes/purchases.tsx:587
-#: src/routes/stock.tsx:349
+#: src/routes/stock.tsx:436
 msgid "安全警戒"
 msgstr "Safety line"
 
-#: src/routes/purchases.tsx:486
-msgid "安全警戒要是整數。"
-msgstr "The safety line has to be a whole number."
-
-#: src/auth/sign-in-panel.tsx:64
+#: src/auth/sign-in-panel.tsx:66
 msgid "密碼"
 msgstr "Password"
 
-#: src/routes/purchases.tsx:196
-msgid "已入庫"
-msgstr "Stocked"
-
-#: src/routes/purchases.tsx:369
+#: src/routes/purchases.tsx:398
 msgid "已在清單"
 msgstr "Already on the list"
 
-#: src/routes/purchases.tsx:191
+#: src/routes/purchases.tsx:153
+#: src/routes/purchases.tsx:169
 msgid "已採購"
 msgstr "Bought"
 
-#: src/auth/sign-in-panel.tsx:90
+#: src/auth/sign-in-panel.tsx:92
 msgid "已有帳戶？登入"
 msgstr "Already have an account? Sign in"
 
-#: src/routes/purchases.tsx:531
-msgid "已有的貨物"
-msgstr "Already on the shelf"
-
-#: src/features/stock/labels.ts:27
+#: src/features/stock/labels.ts:21
 msgid "廚櫃"
 msgstr "Cupboard"
 
-#: src/auth/sign-in-panel.tsx:82
+#: src/auth/sign-in-panel.tsx:84
 msgid "建立帳戶"
 msgstr "Create account"
 
-#: src/routes/purchases.tsx:396
+#: src/routes/purchases.tsx:440
 msgid "建立採購記錄"
 msgstr "Create purchase records"
 
-#: src/features/stock/labels.ts:28
+#: src/features/stock/labels.ts:22
 msgid "影印區"
 msgstr "Print room"
 
@@ -217,246 +173,227 @@ msgstr "Print room"
 msgid "找不到這一筆。"
 msgstr "That line is gone."
 
-#: src/features/stock/errors.ts:8
+#: src/features/stock/errors.ts:9
 msgid "找不到這個空間或物資。"
 msgstr "That space or item is gone."
 
-#: src/components/header.tsx:69
-#: src/components/header.tsx:154
-#: src/routes/purchases.tsx:127
+#: src/features/stock/remove-dialog.tsx:34
+msgid "拿掉 {name}"
+msgstr "Remove {name}"
+
+#: src/components/header.tsx:63
+#: src/components/header.tsx:114
+#: src/routes/purchases.tsx:96
 msgid "採購"
 msgstr "List"
 
-#: src/components/header.tsx:77
+#: src/routes/purchases.tsx:116
+msgid "採購記錄"
+msgstr "Purchase records"
+
+#: src/routes/purchases.tsx:179
+msgid "採購記錄分頁"
+msgstr "Purchase pages"
+
+#: src/routes/stock.tsx:125
 msgid "搜尋物資"
 msgstr "Search items"
 
-#: src/features/stock/board.tsx:49
-#: src/routes/purchases.tsx:49
-#: src/routes/purchases.tsx:342
-#: src/routes/purchases.tsx:511
-#: src/routes/stock.tsx:75
-#: src/routes/stock.tsx:286
+#: src/features/stock/board.tsx:53
+#: src/routes/purchases.tsx:53
+#: src/routes/purchases.tsx:260
+#: src/routes/purchases.tsx:377
+#: src/routes/stock.tsx:85
+#: src/routes/stock.tsx:100
+#: src/routes/stock.tsx:373
 msgid "操作失敗，請再試一次。"
 msgstr "Something went wrong. Please try again."
 
-#: src/features/stock/board.tsx:187
-#: src/routes/stock.tsx:293
-#: src/routes/stock.tsx:385
+#: src/routes/stock.tsx:472
 msgid "放上貨架"
 msgstr "Put on the shelf"
 
-#: src/features/stock/board.tsx:163
-#: src/routes/purchases.tsx:228
-#: src/routes/stock.tsx:340
+#: src/routes/stock.tsx:427
 msgid "數量"
 msgstr "Quantity"
 
-#: src/routes/stock.tsx:267
+#: src/routes/stock.tsx:354
 msgid "數量和安全警戒都要是整數。"
 msgstr "Quantity and the safety line both have to be whole numbers."
 
-#: src/routes/purchases.tsx:532
-msgid "新的一項"
-msgstr "A new item"
-
-#: src/features/stock/labels.ts:39
+#: src/features/stock/labels.ts:34
 msgid "日用"
 msgstr "Supplies"
 
-#. placeholder {0}: formatCents(total)
-#. placeholder {1}: list.data?.memberCount ?? 0
-#. placeholder {2}: formatCents(perPerson)
-#. placeholder {3}: formatCents(remainder)
-#: src/routes/purchases.tsx:137
-msgid "未採購合計 {0}，按 {1} 人分，每人 {2}，餘數 {3} 由勾選的人墊上。"
-msgstr "Open total {0}, split across {1}, {2} each, and {3} covered by whoever checks it off."
+#: src/routes/purchases.tsx:101
+msgid "未採購合計"
+msgstr "Open total"
 
-#. placeholder {0}: formatCents(total)
-#. placeholder {1}: formatCents(budget ?? 0)
-#: src/routes/purchases.tsx:133
-msgid "未採購合計 {0}，部門預算 {1}。"
-msgstr "Open total {0}. Department budget {1}."
-
-#: src/features/stock/labels.ts:13
+#: src/features/stock/labels.ts:6
 msgid "板"
 msgstr "Slab"
 
-#: src/features/stock/board.tsx:190
+#: src/features/stock/board.tsx:122
 msgid "查看全部"
 msgstr "See the shelf"
 
-#: src/routes/index.tsx:19
-#: src/routes/purchases.tsx:30
-#: src/routes/stock.tsx:38
+#: src/routes/index.tsx:21
+#: src/routes/purchases.tsx:35
+#: src/routes/stock.tsx:42
 msgid "正在讀你的空間。"
 msgstr "Loading your spaces."
 
-#: src/routes/purchases.tsx:156
+#: src/routes/purchases.tsx:119
 msgid "正在讀採購清單。"
 msgstr "Loading the list."
 
-#: src/features/stock/board.tsx:83
-#: src/routes/stock.tsx:96
+#: src/features/stock/board.tsx:88
+#: src/routes/stock.tsx:137
 msgid "正在讀這個空間的貨架。"
 msgstr "Loading this shelf."
 
-#: src/routes/purchases.tsx:317
-msgid "每一項都要填金額，才能一起分帳。"
-msgstr "Each item needs an amount before the bill can be split."
-
-#. placeholder {0}: formatCents(line.perPersonCents)
-#: src/routes/purchases.tsx:171
-msgid "每人 {0}"
-msgstr "{0} each"
-
-#: src/features/stock/labels.ts:42
+#: src/features/stock/labels.ts:37
 msgid "水果"
 msgstr "Fruit"
 
-#: src/features/stock/labels.ts:26
+#: src/features/stock/labels.ts:20
 msgid "水槽"
 msgstr "Sink"
 
-#: src/features/stock/board.tsx:259
+#: src/features/stock/board.tsx:191
 msgid "沒扣成"
 msgstr "Not applied"
 
-#: src/features/stock/board.tsx:281
+#: src/features/stock/board.tsx:213
 msgid "沒有低於安全庫存的物資。"
 msgstr "Nothing is under the safety line."
 
-#: src/routes/purchases.tsx:355
+#: src/routes/purchases.tsx:389
 msgid "沒有低於安全警戒的物資。"
 msgstr "Nothing is under the safety line."
 
-#: src/features/stock/board.tsx:308
-msgid "沒有短少。差 0。"
-msgstr "Nothing is short. Gap 0."
-
-#: src/routes/stock.tsx:98
+#: src/routes/stock.tsx:139
 msgid "沒有符合的物資。"
 msgstr "Nothing matches."
 
-#: src/features/stock/labels.ts:25
+#: src/features/stock/labels.ts:19
 msgid "洗手間"
 msgstr "Washroom"
 
-#: src/features/stock/labels.ts:44
+#: src/features/stock/labels.ts:39
 msgid "洗護"
 msgstr "Toiletries"
 
-#: src/routes/purchases.tsx:158
+#: src/routes/purchases.tsx:121
 msgid "清單是空的。"
 msgstr "The list is empty."
 
-#: src/routes/stock.tsx:105
+#: src/routes/stock.tsx:146
 msgid "物資"
 msgstr "Goods"
 
-#: src/features/stock/board.tsx:115
-msgid "現在沒有要先吃掉或補貨的物資。"
-msgstr "Nothing needs eating first or restocking."
-
-#: src/features/stock/labels.ts:16
+#: src/features/stock/labels.ts:9
 msgid "瓶"
 msgstr "Bottle"
 
-#: src/features/stock/labels.ts:36
+#: src/features/stock/labels.ts:31
 msgid "生鮮"
 msgstr "Fresh"
 
-#: src/features/stock/errors.ts:15
+#: src/features/stock/errors.ts:16
 msgid "當時已經沒有這麼多了。"
 msgstr "There was not that much left."
 
-#: src/auth/sign-in-panel.tsx:82
+#: src/auth/sign-in-panel.tsx:84
 msgid "登入"
 msgstr "Sign in"
 
-#: src/auth/sign-in-panel.tsx:29
+#: src/auth/sign-in-panel.tsx:31
 msgid "登入失敗"
 msgstr "Sign-in failed"
 
-#: src/routes/sign-in.tsx:21
+#: src/routes/sign-in.tsx:23
 msgid "登入物資"
 msgstr "Sign in to Goods"
 
-#: src/components/header.tsx:116
-#: src/components/header.tsx:179
+#: src/components/header.tsx:76
+#: src/components/header.tsx:122
 msgid "登出"
 msgstr "Sign out"
 
-#: src/features/stock/labels.ts:12
+#: src/features/stock/labels.ts:5
 msgid "盒"
 msgstr "Carton"
 
-#: src/components/header.tsx:47
-#: src/components/header.tsx:133
+#: src/components/header.tsx:41
+#: src/components/header.tsx:93
 msgid "目錄"
 msgstr "Sections"
 
-#: src/components/header.tsx:54
-#: src/components/header.tsx:139
+#: src/components/header.tsx:48
+#: src/components/header.tsx:99
 msgid "看板"
 msgstr "Board"
 
-#: src/routes/purchases.tsx:553
-#: src/routes/stock.tsx:306
+#: src/routes/stock.tsx:393
 msgid "種類"
 msgstr "Kind"
 
-#: src/components/header.tsx:90
-#: src/components/header.tsx:160
-msgid "空間"
-msgstr "Space"
+#. placeholder {0}: index + 1
+#: src/routes/purchases.tsx:194
+msgid "第 {0} 頁"
+msgstr "Page {0}"
 
-#: src/features/stock/labels.ts:37
+#: src/features/stock/labels.ts:32
 msgid "紙"
 msgstr "Paper"
 
-#: src/features/stock/labels.ts:34
+#: src/features/stock/labels.ts:29
 msgid "紙巾"
 msgstr "Tissue"
 
-#: src/features/stock/labels.ts:18
+#: src/routes/purchases.tsx:427
+msgid "總計 HK$"
+msgstr "Total HK$"
+
+#: src/features/stock/labels.ts:11
 msgid "罐"
 msgstr "Can"
 
-#: src/features/stock/labels.ts:8
-msgid "茶水間"
-msgstr "Tea room"
+#: src/routes/purchases.tsx:354
+msgid "至少補一樣。"
+msgstr "Buy at least one good."
 
-#: src/features/stock/labels.ts:24
+#: src/features/stock/labels.ts:18
 msgid "茶水間層架"
 msgstr "Tea-room shelf"
 
-#. placeholder {0}: item.buy
-#: src/routes/purchases.tsx:366
-#: src/routes/purchases.tsx:376
+#: src/routes/purchases.tsx:266
+#: src/routes/purchases.tsx:402
+msgid "補"
+msgstr "Buy"
+
+#. placeholder {0}: item.name
+#. placeholder {0}: item.quantity
+#: src/routes/purchases.tsx:142
+#: src/routes/purchases.tsx:273
+#: src/routes/purchases.tsx:410
 msgid "補 {0}"
 msgstr "Buy {0}"
 
-#: src/routes/purchases.tsx:215
-msgid "補一筆"
-msgstr "Add a line"
-
-#: src/features/stock/board.tsx:254
+#: src/features/stock/board.tsx:186
 msgid "補上"
 msgstr "Put back"
 
-#: src/features/stock/board.tsx:165
-#: src/features/stock/board.tsx:272
-#: src/routes/stock.tsx:133
-msgid "要先吃掉"
-msgstr "Eat first"
+#: src/routes/purchases.tsx:348
+msgid "補貨數量要是 0 到 99 的整數。"
+msgstr "Enter a whole number from 0 to 99."
 
-#: src/features/stock/board.tsx:127
-msgid "要處理"
-msgstr "To handle"
+#: src/routes/purchases.tsx:246
+msgid "補貨數量要是 1 到 99 的整數。"
+msgstr "Enter a whole number from 1 to 99."
 
-#: src/routes/purchases.tsx:570
-#: src/routes/stock.tsx:323
+#: src/routes/stock.tsx:410
 msgid "規格"
 msgstr "Unit"
 
@@ -464,116 +401,96 @@ msgstr "Unit"
 msgid "語言"
 msgstr "Language"
 
-#: src/features/stock/labels.ts:38
+#: src/features/stock/labels.ts:33
 msgid "調味"
 msgstr "Seasoning"
 
-#: src/features/stock/errors.ts:7
+#: src/features/stock/errors.ts:8
 msgid "請先登入。"
 msgstr "Please sign in first."
 
-#: src/routes/purchases.tsx:83
-msgid "請填整數數量和金額。"
-msgstr "Enter a whole quantity and an amount."
+#: src/routes/purchases.tsx:341
+msgid "請填這次採購的總計。"
+msgstr "Enter the total for this purchase."
 
-#: src/routes/index.tsx:23
+#: src/routes/index.tsx:25
 msgid "讀不到空間，請再試一次。"
 msgstr "Could not load spaces. Try again."
 
-#: src/features/stock/board.tsx:88
+#: src/features/stock/board.tsx:93
 msgid "讀不到貨架，請再試一次。"
 msgstr "Could not load the shelf. Try again."
 
-#: src/components/header.tsx:62
-#: src/components/header.tsx:147
-#: src/features/stock/board.tsx:183
-#: src/routes/stock.tsx:83
+#: src/components/header.tsx:56
+#: src/components/header.tsx:107
+#: src/features/stock/board.tsx:119
+#: src/routes/stock.tsx:111
 msgid "貨架"
 msgstr "Shelf"
 
-#: src/routes/purchases.tsx:537
-msgid "貨架上的貨物"
-msgstr "Good on the shelf"
-
-#: src/routes/purchases.tsx:605
-#: src/routes/stock.tsx:108
-#: src/routes/stock.tsx:367
+#: src/routes/stock.tsx:149
+#: src/routes/stock.tsx:454
 msgid "貨架位置"
 msgstr "Place"
 
-#: src/features/stock/board.tsx:196
+#: src/features/stock/remove-dialog.tsx:37
+msgid "貨架數量和領用記錄會一起刪掉。採購記錄仍保留名稱。"
+msgstr "The quantity and take history go with it. Purchase records keep the name."
+
+#: src/features/stock/board.tsx:127
 msgid "這個空間還沒有公共物資。"
 msgstr "This space has no shared goods yet."
 
-#: src/features/stock/errors.ts:16
+#: src/features/stock/errors.ts:17
 msgid "這幾筆領用互相依賴，沒有套用。"
 msgstr "These takes depend on each other, so none were applied."
 
-#: src/features/stock/errors.ts:10
+#: src/features/stock/errors.ts:11
 msgid "這筆採購沒有寫成功。"
 msgstr "That purchase was not saved."
 
-#: src/features/stock/errors.ts:17
+#: src/features/stock/errors.ts:18
 msgid "這筆採購的格式不對。"
 msgstr "That purchase is not valid."
 
-#: src/features/stock/errors.ts:9
+#: src/features/stock/errors.ts:10
 msgid "這筆領用沒有寫成功。"
 msgstr "That take was not saved."
 
-#: src/components/header.tsx:126
+#: src/components/header.tsx:86
 msgid "選單"
 msgstr "Menu"
 
-#: src/features/stock/board.tsx:244
+#: src/features/stock/board.tsx:176
 msgid "還沒有人領用。較早的離線領用會留下，較晚的那一筆會被拒絕。"
 msgstr "Nobody has taken anything yet. An earlier offline take stays; the later one is refused."
 
-#: src/auth/sign-in-panel.tsx:90
+#: src/auth/sign-in-panel.tsx:92
 msgid "還沒有帳戶？建立一個"
 msgstr "No account yet? Create one"
 
-#: src/features/stock/errors.ts:11
-#: src/features/stock/errors.ts:18
-msgid "部門預算不夠付這一筆。"
-msgstr "The department budget cannot cover this."
-
-#: src/routes/purchases.tsx:382
-msgid "金額"
-msgstr "Amount"
-
-#: src/routes/purchases.tsx:237
-msgid "金額 HK$"
-msgstr "Amount HK$"
-
-#: src/features/stock/board.tsx:298
-msgid "離安全庫存還差"
-msgstr "Short of the safety line"
-
-#: src/features/stock/labels.ts:32
+#: src/features/stock/labels.ts:27
 msgid "零食"
 msgstr "Snacks"
 
-#: src/auth/sign-in-panel.tsx:50
+#: src/auth/sign-in-panel.tsx:52
 msgid "電郵"
 msgstr "Email"
 
-#: src/features/stock/board.tsx:225
-#: src/routes/stock.tsx:121
-#: src/routes/stock.tsx:167
-#: src/routes/stock.tsx:199
+#: src/features/stock/board.tsx:157
+#: src/routes/stock.tsx:215
+#: src/routes/stock.tsx:262
 msgid "領用"
 msgstr "Take"
 
-#: src/features/stock/board.tsx:254
+#: src/routes/stock.tsx:162
+msgid "領用或刪除"
+msgstr "Take or delete"
+
+#: src/features/stock/board.tsx:186
 msgid "領走"
 msgstr "Taken"
 
-#. placeholder {0}: unit(lead.unit)
-#: src/features/stock/board.tsx:143
-msgid "領走 1 {0}"
-msgstr "Take 1 {0}"
-
-#: src/features/stock/labels.ts:40
+#: src/features/stock/labels.ts:35
 msgid "飲料"
 msgstr "Drink"

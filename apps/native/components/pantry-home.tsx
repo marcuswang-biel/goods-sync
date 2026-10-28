@@ -9,10 +9,12 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSignOut } from '@/auth';
 import { loadQueue, queueMovement } from '@/lib/offline-queue';
 
+/** Today's date in UTC, matching the board query's `today` argument. */
 function todayIso(): string {
 	return new Date().toISOString().slice(0, 10);
 }
 
+/** A shelf row the phone home screen can take from. */
 type ShelfItem = {
 	_id: Id<'items'>;
 	name: string;
@@ -22,12 +24,12 @@ type ShelfItem = {
 	supply: 'ok' | 'low' | 'out';
 };
 
+/** Phone home: the one place, expiring and short goods, and a queued-take count. */
 export function PantryHome() {
 	const spaces = useQuery(api.spaces.listMine);
 	const viewer = useQuery(api.viewer.get);
 	const signOut = useSignOut();
-	const [spaceId, setSpaceId] = useState<Id<'spaces'> | null>(null);
-	const active = spaces?.find((space) => space._id === spaceId) ?? spaces?.[0];
+	const active = spaces?.[0];
 	const board = useQuery(
 		api.stock.board,
 		active ? { spaceId: active._id, today: todayIso() } : 'skip',
@@ -40,6 +42,7 @@ export function PantryHome() {
 		void loadQueue().then((queue) => setQueued(queue.length));
 	}, []);
 
+	/** Takes one unit, or queues the take when the phone is offline. */
 	const take = async (item: ShelfItem) => {
 		if (!active) return;
 		const occurredAt = Date.now();
@@ -90,30 +93,18 @@ export function PantryHome() {
 				</Pressable>
 			</View>
 			<Text style={styles.email}>{viewer?.email ?? ''}</Text>
-			<ScrollView
-				horizontal
-				showsHorizontalScrollIndicator={false}
-				contentContainerStyle={styles.spaces}
-			>
-				{(spaces ?? []).map((space) => (
-					<Pressable key={space._id} onPress={() => setSpaceId(space._id)} style={styles.hit}>
-						<Text style={space._id === active?._id ? styles.spaceOn : styles.spaceOff}>
-							{space.name}
-						</Text>
-					</Pressable>
-				))}
-			</ScrollView>
 			<Text style={styles.title}>{active?.name ?? '空間'}</Text>
 			<Text style={[styles.figure, attention === 0 && styles.muted]}>{attention}</Text>
 			<Text style={styles.caption}>要處理</Text>
 			{note && <Text style={styles.note}>{note}</Text>}
 			{queued > 0 && <Text style={styles.note}>離線佇列 {queued} 筆。到採購頁合併。</Text>}
-			<Section title="要先吃掉" rows={expiring} onTake={take} empty="三天內沒有要到期的。" />
+			<Section title="即將過期" rows={expiring} onTake={take} empty="三天內沒有要到期的。" />
 			<Section title="不夠了" rows={short} onTake={take} empty="沒有低於安全庫存的。" />
 		</ScrollView>
 	);
 }
 
+/** One titled list of goods the phone can take from. */
 function Section({
 	title,
 	rows,
@@ -149,6 +140,7 @@ function Section({
 	);
 }
 
+/** Layout for the phone shelf. */
 const styles = StyleSheet.create({
 	page: { flex: 1, backgroundColor: '#f2f4f7' },
 	content: { padding: 16, paddingBottom: 48 },
@@ -157,9 +149,6 @@ const styles = StyleSheet.create({
 	hit: { minHeight: 44, justifyContent: 'center' },
 	link: { fontSize: 14, color: '#0a0a0a' },
 	email: { color: '#6b6b6b', fontSize: 12 },
-	spaces: { gap: 16, paddingVertical: 8 },
-	spaceOn: { fontSize: 14, color: '#0a0a0a' },
-	spaceOff: { fontSize: 14, color: '#6b6b6b' },
 	title: { fontSize: 24, fontWeight: '500', color: '#0a0a0a', marginTop: 12 },
 	figure: { fontSize: 30, color: '#1d5fbf', fontVariant: ['tabular-nums'], marginTop: 8 },
 	caption: { fontSize: 12, color: '#6b6b6b' },

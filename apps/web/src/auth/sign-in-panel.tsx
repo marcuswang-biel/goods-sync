@@ -4,6 +4,7 @@ import { useState, type FormEvent } from 'react';
 
 import { authClient } from './auth-client';
 
+/** Whether the form is signing in or creating an account. */
 type Mode = 'signIn' | 'signUp';
 
 /** Email + password sign-in, with a sign-up mode for new accounts. */
@@ -16,6 +17,7 @@ export function SignInPanel() {
 	const [error, setError] = useState<string | null>(null);
 	const [pending, setPending] = useState(false);
 
+	/** Sends the email form to Better Auth. A failure stays on this form. */
 	const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		setPending(true);

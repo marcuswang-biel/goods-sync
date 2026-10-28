@@ -6,6 +6,8 @@
 	"type": "module",
 	"exports": {
 		".": "./src/index.ts",
+		"./offline": "./src/offline/index.ts",
+		"./purchase": "./src/purchase/index.ts",
 		"./stock": "./src/stock/index.ts"
 	},
 	"scripts": {

@@ -9,9 +9,9 @@ export const APP_ERROR_CODES = {
 	notFound: 'NOT_FOUND',
 	stockInvalid: 'STOCK_INVALID',
 	purchaseInvalid: 'PURCHASE_INVALID',
-	budgetExceeded: 'BUDGET_EXCEEDED',
 } as const;
 
+/** One of `APP_ERROR_CODES`. Clients switch on this, not on the message. */
 export type AppErrorCode = (typeof APP_ERROR_CODES)[keyof typeof APP_ERROR_CODES];
 
 /** Shape of `ConvexError.data` thrown by this backend. */
@@ -20,6 +20,7 @@ export type AppErrorData = {
 	message: string;
 };
 
+/** Lookup set for `isAppErrorCode`. */
 const KNOWN_CODES: ReadonlySet<string> = new Set(Object.values(APP_ERROR_CODES));
 
 /** Narrows a code read off an error (`convexErrorCode`) to one this app defines. */

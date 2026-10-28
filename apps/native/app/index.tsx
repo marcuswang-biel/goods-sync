@@ -5,6 +5,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { SignInScreen } from '@/auth';
 import { PantryHome } from '@/components/pantry-home';
 
+/** Phone home: sign in, or the shelf plus a link to purchases. */
 export default function HomeScreen() {
 	const { isAuthenticated, isLoading } = useConvexAuth();
 
@@ -26,6 +27,7 @@ export default function HomeScreen() {
 	);
 }
 
+/** Layout for the phone home screen. */
 const styles = StyleSheet.create({
 	page: { flex: 1, backgroundColor: '#f2f4f7' },
 	center: { flex: 1, alignItems: 'center', justifyContent: 'center' },

@@ -3,8 +3,10 @@ import { Effect, Schema, SchemaTransformation } from 'effect';
 import { isRealIsoDate } from './calendar';
 import { InvalidStock } from './errors';
 
+/** Calendar day text. A real date is checked after this shape matches. */
 const IsoDate = Schema.String.check(Schema.isPattern(/^\d{4}-\d{2}-\d{2}$/));
 
+/** A good a member is about to place on a shelf. */
 const ShelfDraft = Schema.Struct({
 	name: Schema.String.pipe(Schema.decode(SchemaTransformation.trim())).check(
 		Schema.isMinLength(1),
@@ -35,6 +37,7 @@ const ShelfDraft = Schema.Struct({
 	shelf: Schema.Literals(['fridge', 'tearoom', 'washroom', 'sink', 'cupboard', 'printroom']),
 });
 
+/** A validated shelf good. */
 export type ShelfItemDraft = typeof ShelfDraft.Type;
 
 /** Validates a good before it is placed on a shelf. */
