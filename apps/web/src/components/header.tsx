@@ -1,10 +1,10 @@
-import { Button } from '@goods/web-ui';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { Link } from '@tanstack/react-router';
 import { useConvexAuth } from 'convex/react';
 import { useState } from 'react';
 
 import { useSignOut } from '@/auth';
+import { Button } from '@/components/ui/button';
 
 import { LocaleSwitcher } from './locale-switcher';
 
@@ -18,9 +18,9 @@ function Mark() {
 }
 
 /** Nav link when the route is not current. */
-const linkClass = 'text-sm text-[#6b6b6b] hover:text-[#0a0a0a]';
+const linkClass = 'text-sm text-muted-foreground hover:text-foreground';
 /** Nav link on the current route. */
-const activeLinkClass = 'text-sm text-[#0a0a0a]';
+const activeLinkClass = 'text-sm text-foreground';
 
 /** App chrome: board, shelf, and purchases. The place is not switched here. */
 export default function Header() {
@@ -30,10 +30,10 @@ export default function Header() {
 	const [menuOpen, setMenuOpen] = useState(false);
 
 	return (
-		<header className="border-b border-[#e6e6e6] bg-[#f2f4f7]">
+		<header className="bg-background border-b">
 			{/* 1128px column: 12×83px + 11×12px. At 1440 the gutters are 156px; at 1512 they are 192px. */}
 			<div className="mx-auto flex h-12 w-full max-w-[1128px] items-center gap-3 px-4 lg:px-0">
-				<Link to="/" className="flex items-center gap-2 text-sm font-medium text-[#0a0a0a]">
+				<Link to="/" className="flex items-center gap-2 text-sm font-medium">
 					<Mark />
 					物資
 				</Link>
@@ -70,27 +70,28 @@ export default function Header() {
 						<Button
 							variant="ghost"
 							size="sm"
-							className="hidden shadow-none md:inline-flex"
+							className="hidden md:inline-flex"
 							onClick={() => void signOut()}
 						>
 							<Trans>登出</Trans>
 						</Button>
 					)}
 					{isAuthenticated && (
-						<button
-							type="button"
-							className="inline-flex h-11 items-center px-2 text-sm md:hidden"
+						<Button
+							variant="ghost"
+							size="sm"
+							className="md:hidden"
 							aria-expanded={menuOpen}
 							onClick={() => setMenuOpen((open) => !open)}
 						>
 							<Trans>選單</Trans>
-						</button>
+						</Button>
 					)}
 				</div>
 			</div>
 			{menuOpen && isAuthenticated && (
-				<div className="border-t border-[#e6e6e6] px-4 py-3 md:hidden">
-					<nav className="grid gap-1" aria-label={t`目錄`}>
+				<div className="border-t px-4 py-3 md:hidden">
+					<nav className="flex flex-col gap-1" aria-label={t`目錄`}>
 						<Link
 							to="/"
 							className="flex h-11 items-center text-sm"
@@ -114,13 +115,9 @@ export default function Header() {
 							<Trans>採購</Trans>
 						</Link>
 					</nav>
-					<button
-						type="button"
-						className="mt-2 flex h-11 items-center text-sm"
-						onClick={() => void signOut()}
-					>
+					<Button variant="ghost" className="mt-2" onClick={() => void signOut()}>
 						<Trans>登出</Trans>
-					</button>
+					</Button>
 				</div>
 			)}
 		</header>

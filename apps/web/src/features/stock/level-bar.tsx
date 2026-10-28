@@ -1,3 +1,6 @@
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
+
 /** Share of the safety line still on the shelf. Above the line this passes 100. */
 export function remainingPercent(quantity: number, safetyQuantity: number): number {
 	if (safetyQuantity <= 0) return quantity > 0 ? 100 : 0;
@@ -21,9 +24,9 @@ export function LevelBar({
 	const covered = Math.min(ratio, 1) * 100;
 
 	return (
-		<div className={`relative h-2 ${className}`} aria-hidden="true">
-			<div className="absolute inset-0 bg-[#d4d4d4]" />
-			<div className="absolute inset-y-0 left-0 bg-[#0a0a0a]" style={{ width: `${covered}%` }} />
+		<div className={cn('relative h-2', className)} aria-hidden="true">
+			<div className="bg-input absolute inset-0" />
+			<div className="bg-foreground absolute inset-y-0 left-0" style={{ width: `${covered}%` }} />
 		</div>
 	);
 }
@@ -41,12 +44,12 @@ export function StockAmount({
 	className?: string;
 }) {
 	return (
-		<span className={`inline-flex shrink-0 items-center gap-2 text-sm tabular-nums ${className}`}>
+		<span className={cn('inline-flex shrink-0 items-center gap-2 text-sm tabular-nums', className)}>
 			<span className="w-16 text-left">
 				{quantity}
-				<span className="ml-1 text-xs text-[#6b6b6b]">{unit}</span>
+				<span className="text-muted-foreground ml-1 text-xs">{unit}</span>
 			</span>
-			<span className="h-4 w-px shrink-0 bg-[#d4d4d4]" aria-hidden="true" />
+			<Separator orientation="vertical" className="h-4" />
 			<span className="text-left">{remainingPercent(quantity, safetyQuantity)}%</span>
 		</span>
 	);

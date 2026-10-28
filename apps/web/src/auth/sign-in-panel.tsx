@@ -1,6 +1,11 @@
-import { Button, Input, Label } from '@goods/web-ui';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { useState, type FormEvent } from 'react';
+
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
 
 import { authClient } from './auth-client';
 
@@ -33,64 +38,67 @@ export function SignInPanel() {
 	};
 
 	return (
-		<form onSubmit={handleSubmit} className="space-y-4">
-			{mode === 'signUp' && (
-				<div className="space-y-2">
-					<Label htmlFor="sign-in-name">
-						<Trans>名稱</Trans>
-					</Label>
+		<form onSubmit={handleSubmit}>
+			<FieldGroup>
+				{mode === 'signUp' && (
+					<Field>
+						<FieldLabel htmlFor="sign-in-name">
+							<Trans>名稱</Trans>
+						</FieldLabel>
+						<Input
+							id="sign-in-name"
+							autoComplete="name"
+							value={name}
+							onChange={(event) => setName(event.target.value)}
+						/>
+					</Field>
+				)}
+				<Field>
+					<FieldLabel htmlFor="sign-in-email">
+						<Trans>電郵</Trans>
+					</FieldLabel>
 					<Input
-						id="sign-in-name"
-						autoComplete="name"
-						value={name}
-						onChange={(event) => setName(event.target.value)}
+						id="sign-in-email"
+						type="email"
+						autoComplete="username email"
+						placeholder={'dev@example.com' /* taste-skill-ignore: seeded local account */}
+						value={email}
+						onChange={(event) => setEmail(event.target.value)}
+						required
 					/>
-				</div>
-			)}
-			<div className="space-y-2">
-				<Label htmlFor="sign-in-email">
-					<Trans>電郵</Trans>
-				</Label>
-				<Input
-					id="sign-in-email"
-					type="email"
-					autoComplete="username email"
-					placeholder={'dev@example.com' /* taste-skill-ignore: seeded local account */}
-					value={email}
-					onChange={(event) => setEmail(event.target.value)}
-					required
-				/>
-			</div>
-			<div className="space-y-2">
-				<Label htmlFor="sign-in-password">
-					<Trans>密碼</Trans>
-				</Label>
-				<Input
-					id="sign-in-password"
-					type="password"
-					autoComplete={mode === 'signIn' ? 'current-password' : 'new-password'}
-					minLength={8}
-					value={password}
-					onChange={(event) => setPassword(event.target.value)}
-					required
-				/>
-			</div>
-			{error && (
-				<p role="alert" className="text-destructive text-sm">
-					{error}
-				</p>
-			)}
-			<Button type="submit" className="w-full" disabled={pending}>
-				{mode === 'signIn' ? <Trans>登入</Trans> : <Trans>建立帳戶</Trans>}
-			</Button>
-			<Button
-				type="button"
-				variant="link"
-				className="w-full"
-				onClick={() => setMode(mode === 'signIn' ? 'signUp' : 'signIn')}
-			>
-				{mode === 'signIn' ? <Trans>還沒有帳戶？建立一個</Trans> : <Trans>已有帳戶？登入</Trans>}
-			</Button>
+				</Field>
+				<Field>
+					<FieldLabel htmlFor="sign-in-password">
+						<Trans>密碼</Trans>
+					</FieldLabel>
+					<Input
+						id="sign-in-password"
+						type="password"
+						autoComplete={mode === 'signIn' ? 'current-password' : 'new-password'}
+						minLength={8}
+						value={password}
+						onChange={(event) => setPassword(event.target.value)}
+						required
+					/>
+				</Field>
+				{error && (
+					<Alert variant="destructive">
+						<AlertDescription>{error}</AlertDescription>
+					</Alert>
+				)}
+				<Button type="submit" className="w-full" disabled={pending}>
+					{pending && <Spinner data-icon="inline-start" />}
+					{mode === 'signIn' ? <Trans>登入</Trans> : <Trans>建立帳戶</Trans>}
+				</Button>
+				<Button
+					type="button"
+					variant="link"
+					className="w-full"
+					onClick={() => setMode(mode === 'signIn' ? 'signUp' : 'signIn')}
+				>
+					{mode === 'signIn' ? <Trans>還沒有帳戶？建立一個</Trans> : <Trans>已有帳戶？登入</Trans>}
+				</Button>
+			</FieldGroup>
 		</form>
 	);
 }

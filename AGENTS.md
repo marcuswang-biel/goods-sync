@@ -39,7 +39,7 @@ pnpm workspaces with Turborepo.
 | `packages/backend/convex/`                                      | Convex schema and functions; helpers in `lib`                         |
 | `packages/domain/`                                              | Business rules in Effect. Never imports Convex                        |
 | `packages/shared/`                                              | Types and helpers shared by backend and clients (error codes)         |
-| `packages/web-ui/`                                              | Radix + Tailwind primitives                                           |
+| `apps/web/src/components/ui/`                                   | shadcn/ui components (Base UI + Tailwind)                             |
 | `packages/config/`                                              | `tsconfig.base.json`                                                  |
 | `packages/eslint-plugin-app-lingui/`, `tools/oxlint/anti-slop/` | Local lint rules                                                      |
 

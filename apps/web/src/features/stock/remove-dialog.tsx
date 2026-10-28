@@ -1,9 +1,21 @@
 import { Trans } from '@lingui/react/macro';
-import { useEffect, useRef } from 'react';
+import { useState } from 'react';
 
-/** Native dialog so Escape and focus stay with the platform. */
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Spinner } from '@/components/ui/spinner';
+
+/** Confirm before a good, and its take history, leave the shelf. */
 export function ConfirmRemove({
-	name,
+	name: itemName,
 	busy,
 	onClose,
 	onConfirm,
@@ -13,44 +25,35 @@ export function ConfirmRemove({
 	onClose: () => void;
 	onConfirm: () => void;
 }) {
-	const ref = useRef<HTMLDialogElement>(null);
-
-	useEffect(() => {
-		const dialog = ref.current;
-		if (!dialog) return;
-		if (name && !dialog.open) dialog.showModal();
-		if (!name && dialog.open) dialog.close();
-	}, [name]);
+	const [name, setName] = useState(itemName ?? '');
+	if (itemName !== null && itemName !== name) setName(itemName);
 
 	return (
-		<dialog
-			ref={ref}
-			className="w-[min(24rem,calc(100%-2rem))] rounded-[8px] border border-[#e6e6e6] bg-white p-4 text-[#0a0a0a] backdrop:bg-[#0a0a0a]/20"
-			onClose={onClose}
+		<AlertDialog
+			open={itemName !== null}
+			onOpenChange={(open) => {
+				if (!open) onClose();
+			}}
 		>
-			{name && (
-				<>
-					<h2 className="text-base font-medium">
+			<AlertDialogContent>
+				<AlertDialogHeader>
+					<AlertDialogTitle>
 						<Trans>拿掉 {name}</Trans>
-					</h2>
-					<p className="mt-2 text-sm">
+					</AlertDialogTitle>
+					<AlertDialogDescription>
 						<Trans>貨架數量和領用記錄會一起刪掉。採購記錄仍保留名稱。</Trans>
-					</p>
-					<div className="mt-4 flex justify-end gap-3">
-						<button type="button" className="h-9 px-3 text-sm" disabled={busy} onClick={onClose}>
-							<Trans>取消</Trans>
-						</button>
-						<button
-							type="button"
-							className="h-9 rounded-[6px] bg-[#141414] px-3 text-sm text-white disabled:opacity-50"
-							disabled={busy}
-							onClick={onConfirm}
-						>
-							<Trans>刪除</Trans>
-						</button>
-					</div>
-				</>
-			)}
-		</dialog>
+					</AlertDialogDescription>
+				</AlertDialogHeader>
+				<AlertDialogFooter>
+					<AlertDialogCancel disabled={busy}>
+						<Trans>取消</Trans>
+					</AlertDialogCancel>
+					<AlertDialogAction variant="destructive" disabled={busy} onClick={onConfirm}>
+						{busy && <Spinner data-icon="inline-start" />}
+						<Trans>刪除</Trans>
+					</AlertDialogAction>
+				</AlertDialogFooter>
+			</AlertDialogContent>
+		</AlertDialog>
 	);
 }

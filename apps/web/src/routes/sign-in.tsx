@@ -19,7 +19,7 @@ function SignInPage() {
 	return (
 		<div className="mx-auto flex min-h-full w-full max-w-[1128px] items-center px-4 py-10 lg:px-0">
 			<div className="w-full max-w-sm">
-				<h1 className="text-[24px] leading-none font-medium">
+				<h1 className="text-2xl leading-none font-medium">
 					<Trans>登入物資</Trans>
 				</h1>
 				<div className="mt-6">
