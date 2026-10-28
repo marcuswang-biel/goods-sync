@@ -1,4 +1,3 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@acme/web-ui';
 import { Trans } from '@lingui/react/macro';
 import { createFileRoute, Navigate } from '@tanstack/react-router';
 import { useConvexAuth } from 'convex/react';
@@ -6,30 +5,27 @@ import { useConvexAuth } from 'convex/react';
 import { SignInPanel } from '@/auth';
 import Loader from '@/components/loader';
 
+/** Sign-in route. */
 export const Route = createFileRoute('/sign-in')({
 	component: SignInPage,
 });
 
+/** Sign-in form. An existing session goes straight to the board. */
 function SignInPage() {
 	const { isAuthenticated, isLoading } = useConvexAuth();
 	if (isLoading) return <Loader />;
-	if (isAuthenticated) return <Navigate to="/claims" replace />;
+	if (isAuthenticated) return <Navigate to="/" replace />;
 
 	return (
-		<div className="flex min-h-full items-center justify-center p-4">
-			<Card className="w-full max-w-md">
-				<CardHeader className="text-center">
-					<CardTitle className="text-2xl">
-						<Trans>登入</Trans>
-					</CardTitle>
-					<CardDescription>
-						<Trans>登入以使用內部系統</Trans>
-					</CardDescription>
-				</CardHeader>
-				<CardContent>
+		<div className="mx-auto flex min-h-full w-full max-w-[1128px] items-center px-4 py-10 lg:px-0">
+			<div className="w-full max-w-sm">
+				<h1 className="text-[24px] leading-none font-medium">
+					<Trans>登入物資</Trans>
+				</h1>
+				<div className="mt-6">
 					<SignInPanel />
-				</CardContent>
-			</Card>
+				</div>
+			</div>
 		</div>
 	);
 }

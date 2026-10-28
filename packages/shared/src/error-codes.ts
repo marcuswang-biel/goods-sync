@@ -7,10 +7,11 @@
 export const APP_ERROR_CODES = {
 	unauthenticated: 'UNAUTHENTICATED',
 	notFound: 'NOT_FOUND',
-	claimInvalid: 'CLAIM_INVALID',
-	claimMonthlyQuotaExceeded: 'CLAIM_MONTHLY_QUOTA_EXCEEDED',
+	stockInvalid: 'STOCK_INVALID',
+	purchaseInvalid: 'PURCHASE_INVALID',
 } as const;
 
+/** One of `APP_ERROR_CODES`. Clients switch on this, not on the message. */
 export type AppErrorCode = (typeof APP_ERROR_CODES)[keyof typeof APP_ERROR_CODES];
 
 /** Shape of `ConvexError.data` thrown by this backend. */
@@ -19,6 +20,7 @@ export type AppErrorData = {
 	message: string;
 };
 
+/** Lookup set for `isAppErrorCode`. */
 const KNOWN_CODES: ReadonlySet<string> = new Set(Object.values(APP_ERROR_CODES));
 
 /** Narrows a code read off an error (`convexErrorCode`) to one this app defines. */

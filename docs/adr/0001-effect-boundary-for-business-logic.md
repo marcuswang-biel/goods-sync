@@ -8,7 +8,7 @@ Convex handlers mix four jobs: authorization, reads, the business decision and w
 
 ## Decision
 
-1. Business rules live in `packages/domain`, written as Effect programs. The package depends on `effect` only. It never imports `convex` or `@acme/backend`; `packages/domain/.oxlintrc.json` makes that a lint error.
+1. Business rules live in `packages/domain`, written as Effect programs. The package depends on `effect` only. It never imports `convex` or `@goods/backend`; `packages/domain/.oxlintrc.json` makes that a lint error.
 2. A rule's expected failures are tagged errors (`Schema.TaggedErrorClass`). Its configuration and collaborators are services provided through a `Layer`. Its input is decoded with Effect Schema, so validation is part of the rule.
 3. A Convex handler is the boundary. In order, it:
    1. authorizes (`requireUserId(ctx)`),
@@ -18,7 +18,7 @@ Convex handlers mix four jobs: authorization, reads, the business decision and w
    5. writes the result.
 4. Rules are tested with `@effect/vitest` against a test `Layer`. The handler is tested with convex-test for authorization, reads, writes and the error-code mapping.
 
-The reference implementation is `packages/domain/src/claims/` (rule) and `packages/backend/convex/claims.ts` (`submit`).
+The reference implementation is `packages/domain/src/stock/` (the shelf rules and the fold) and `packages/backend/convex/stock.ts` (`sync`). Purchases live in `packages/domain/src/purchase/`. The phone queue lives in `packages/domain/src/offline/`.
 
 ## Consequences
 

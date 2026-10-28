@@ -1,5 +1,5 @@
 {
-	"name": "@acme/web",
+	"name": "@goods/web",
 	"version": "0.1.0",
 	"private": true,
 	"type": "module",
@@ -19,11 +19,14 @@
 		"test": "vitest run"
 	},
 	"dependencies": {
-		"@acme/backend": "workspace:*",
-		"@acme/shared": "workspace:*",
-		"@acme/web-ui": "workspace:*",
 		"@convex-dev/better-auth": "catalog:",
 		"@convex-dev/react-query": "catalog:",
+		"@fontsource/geist": "^5.3.0",
+		"@fontsource/geist-mono": "^5.3.0",
+		"@goods/backend": "workspace:*",
+		"@goods/domain": "workspace:*",
+		"@goods/shared": "workspace:*",
+		"@goods/web-ui": "workspace:*",
 		"@lingui/core": "catalog:",
 		"@lingui/react": "catalog:",
 		"@t3-oss/env-core": "catalog:",
@@ -39,7 +42,7 @@
 		"zod": "catalog:"
 	},
 	"devDependencies": {
-		"@acme/config": "workspace:*",
+		"@goods/config": "workspace:*",
 		"@lingui/babel-plugin-lingui-macro": "catalog:",
 		"@lingui/cli": "catalog:",
 		"@lingui/conf": "catalog:",

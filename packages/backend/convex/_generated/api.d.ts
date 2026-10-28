@@ -9,12 +9,16 @@
  */
 
 import type * as auth from "../auth.js";
-import type * as claims from "../claims.js";
 import type * as functions from "../functions.js";
 import type * as http from "../http.js";
 import type * as init from "../init.js";
+import type * as lib_applyStock from "../lib/applyStock.js";
 import type * as lib_identity from "../lib/identity.js";
+import type * as lib_spaceAccess from "../lib/spaceAccess.js";
 import type * as migrations from "../migrations.js";
+import type * as purchases from "../purchases.js";
+import type * as spaces from "../spaces.js";
+import type * as stock from "../stock.js";
 import type * as viewer from "../viewer.js";
 
 import type {
@@ -25,12 +29,16 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
-  claims: typeof claims;
   functions: typeof functions;
   http: typeof http;
   init: typeof init;
+  "lib/applyStock": typeof lib_applyStock;
   "lib/identity": typeof lib_identity;
+  "lib/spaceAccess": typeof lib_spaceAccess;
   migrations: typeof migrations;
+  purchases: typeof purchases;
+  spaces: typeof spaces;
+  stock: typeof stock;
   viewer: typeof viewer;
 }>;
 

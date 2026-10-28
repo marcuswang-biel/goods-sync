@@ -1,12 +1,12 @@
 # Auth: Better Auth on Convex
 
-Better Auth runs inside the Convex deployment through the `@convex-dev/better-auth` component. Both clients end up with a Convex JWT whose `sub` is the Better Auth user id. Domain code reads only that subject (`packages/backend/convex/lib/identity.ts`), so tables like `claims` do not depend on the auth library.
+Better Auth runs inside the Convex deployment through the `@convex-dev/better-auth` component. Both clients end up with a Convex JWT whose `sub` is the Better Auth user id. Domain code reads only that subject (`packages/backend/convex/lib/identity.ts`), so tables like `items` do not depend on the auth library.
 
 ## How it is wired
 
 - **Backend.** `convex/convex.config.ts` installs the component. `convex/auth.ts` builds the Better Auth instance with email + password and three plugins: `convex` (issues the Convex JWT), `crossDomain` (web runs on a different origin than the Convex site URL) and `expo` (native). `convex/http.ts` mounts the routes under `/api/auth/*` with CORS.
 - **Web.** `apps/web/src/auth/` holds the client (`convexClient` + `crossDomainClient`), `ConvexBetterAuthProvider`, the sign-in form and `useSignOut`. The rest of the app uses only `useConvexAuth()` and `@/auth`.
-- **Native.** `apps/native/auth/` uses Better Auth's official Expo client (`@better-auth/expo/client`) with the session stored in `expo-secure-store`, plus `convexClient`. The backend trusts the app scheme (`acme://`, from `app.json`).
+- **Native.** `apps/native/auth/` uses Better Auth's official Expo client (`@better-auth/expo/client`) with the session stored in `expo-secure-store`, plus `convexClient`. The backend trusts the app scheme (`goods://`, from `app.json`).
 
 ## Deployment env
 
@@ -14,7 +14,7 @@ Better Auth runs inside the Convex deployment through the `@convex-dev/better-au
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | `SITE_URL`           | Comma-separated trusted web origins; the first is canonical. `worktree:setup` sets all local ports. Prod: the web URL. |
 | `BETTER_AUTH_SECRET` | 32 random bytes, hex. `worktree:setup` generates it; set your own in prod.                                             |
-| `NATIVE_APP_SCHEME`  | Optional. Defaults to `acme`; must match `scheme` in `apps/native/app.json`.                                           |
+| `NATIVE_APP_SCHEME`  | Optional. Defaults to `goods`; must match `scheme` in `apps/native/app.json`.                                           |
 | `CONVEX_DEBUG`       | `true` on local dev only. Unlocks the dev seed and trusts `exp://` for Expo Go. Never set in prod.                     |
 
 Client env: `VITE_CONVEX_URL` / `VITE_CONVEX_SITE_URL` (web) and `EXPO_PUBLIC_CONVEX_URL` / `EXPO_PUBLIC_CONVEX_SITE_URL` (native). `worktree:setup` writes them.
@@ -23,10 +23,10 @@ Client env: `VITE_CONVEX_URL` / `VITE_CONVEX_SITE_URL` (web) and `EXPO_PUBLIC_CO
 
 `pnpm worktree:setup` (and every `pnpm dev`, through `convex dev --run init`) creates:
 
-- Email: `dev@example.com`
-- Password: `devpassword`
+- Email: `dev@example.com` (凱) and `roommate@example.com` (阿澄)
+- Password: `devpassword` for both
 
-New accounts can also sign up from the web sign-in page.
+Both accounts belong to 公司茶水間. New accounts can also sign up from the web sign-in page; a new account has no space until it is added to one.
 
 ## Tests
 

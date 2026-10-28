@@ -1,5 +1,5 @@
 {
-	"name": "@acme/oxlint-anti-slop",
+	"name": "@goods/oxlint-anti-slop",
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",

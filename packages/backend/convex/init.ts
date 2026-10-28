@@ -1,7 +1,7 @@
 /**
  * Dev seed — idempotent.
  *
- * Ensures the dev user exists (and owns a couple of example claims) so a fresh
+ * Ensures the dev users exist (and own the demo flat and tea room) so a fresh
  * worktree can sign in immediately.
  *
  * Convex pattern (https://stack.convex.dev/seeding-data-for-preview-deployments):
@@ -15,6 +15,7 @@ import { v } from 'convex/values';
 import { internal } from './_generated/api';
 import { internalAction } from './_generated/server';
 
+/** What `convex run init` returns. Skipped when this is not a local debug backend. */
 type SeedResult = { status: 'seeded' | 'skipped'; email: string | null };
 
 export default internalAction({

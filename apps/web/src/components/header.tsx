@@ -1,45 +1,128 @@
-import { api } from '@acme/backend/convex/_generated/api';
-import { Button } from '@acme/web-ui';
-import { convexQuery } from '@convex-dev/react-query';
-import { Trans } from '@lingui/react/macro';
-import { useQuery } from '@tanstack/react-query';
+import { Button } from '@goods/web-ui';
+import { Trans, useLingui } from '@lingui/react/macro';
 import { Link } from '@tanstack/react-router';
 import { useConvexAuth } from 'convex/react';
+import { useState } from 'react';
 
 import { useSignOut } from '@/auth';
 
 import { LocaleSwitcher } from './locale-switcher';
 
+/** Wordmark bars. Decorative; the link text is the name. */
+function Mark() {
+	return (
+		<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" className="shrink-0">
+			<path d="M2 5.5h16M2 10h12M2 14.5h8" fill="none" stroke="currentColor" strokeWidth="1.5" />
+		</svg>
+	);
+}
+
+/** Nav link when the route is not current. */
+const linkClass = 'text-sm text-[#6b6b6b] hover:text-[#0a0a0a]';
+/** Nav link on the current route. */
+const activeLinkClass = 'text-sm text-[#0a0a0a]';
+
+/** App chrome: board, shelf, and purchases. The place is not switched here. */
 export default function Header() {
 	const { isAuthenticated } = useConvexAuth();
-	const viewer = useQuery({ ...convexQuery(api.viewer.get, {}), enabled: isAuthenticated });
 	const signOut = useSignOut();
+	const { t } = useLingui();
+	const [menuOpen, setMenuOpen] = useState(false);
 
 	return (
-		<header className="flex h-14 items-center justify-between border-b px-4">
-			<nav className="flex items-center gap-4 text-sm font-medium">
-				<Link to="/" className="font-semibold">
-					Acme
+		<header className="border-b border-[#e6e6e6] bg-[#f2f4f7]">
+			{/* 1128px column: 12×83px + 11×12px. At 1440 the gutters are 156px; at 1512 they are 192px. */}
+			<div className="mx-auto flex h-12 w-full max-w-[1128px] items-center gap-3 px-4 lg:px-0">
+				<Link to="/" className="flex items-center gap-2 text-sm font-medium text-[#0a0a0a]">
+					<Mark />
+					物資
 				</Link>
 				{isAuthenticated && (
-					<Link to="/claims" className="[&.active]:text-foreground text-muted-foreground">
-						<Trans>報銷</Trans>
-					</Link>
+					<nav className="ml-4 hidden items-center gap-4 md:flex" aria-label={t`目錄`}>
+						<Link
+							to="/"
+							activeOptions={{ exact: true }}
+							className={linkClass}
+							activeProps={{ className: activeLinkClass }}
+						>
+							<Trans>看板</Trans>
+						</Link>
+						<Link
+							to="/stock"
+							search={{ q: '' }}
+							className={linkClass}
+							activeProps={{ className: activeLinkClass }}
+						>
+							<Trans>貨架</Trans>
+						</Link>
+						<Link
+							to="/purchases"
+							className={linkClass}
+							activeProps={{ className: activeLinkClass }}
+						>
+							<Trans>採購</Trans>
+						</Link>
+					</nav>
 				)}
-			</nav>
-			<div className="flex items-center gap-3">
-				{viewer.data && (
-					<span className="text-muted-foreground text-sm">
-						{viewer.data.email ?? viewer.data.name ?? viewer.data.subject}
-					</span>
-				)}
-				<LocaleSwitcher />
-				{isAuthenticated && (
-					<Button variant="outline" size="sm" onClick={() => void signOut()}>
-						<Trans>登出</Trans>
-					</Button>
-				)}
+				<div className="ml-auto flex items-center gap-2">
+					<LocaleSwitcher />
+					{isAuthenticated && (
+						<Button
+							variant="ghost"
+							size="sm"
+							className="hidden shadow-none md:inline-flex"
+							onClick={() => void signOut()}
+						>
+							<Trans>登出</Trans>
+						</Button>
+					)}
+					{isAuthenticated && (
+						<button
+							type="button"
+							className="inline-flex h-11 items-center px-2 text-sm md:hidden"
+							aria-expanded={menuOpen}
+							onClick={() => setMenuOpen((open) => !open)}
+						>
+							<Trans>選單</Trans>
+						</button>
+					)}
+				</div>
 			</div>
+			{menuOpen && isAuthenticated && (
+				<div className="border-t border-[#e6e6e6] px-4 py-3 md:hidden">
+					<nav className="grid gap-1" aria-label={t`目錄`}>
+						<Link
+							to="/"
+							className="flex h-11 items-center text-sm"
+							onClick={() => setMenuOpen(false)}
+						>
+							<Trans>看板</Trans>
+						</Link>
+						<Link
+							to="/stock"
+							search={{ q: '' }}
+							className="flex h-11 items-center text-sm"
+							onClick={() => setMenuOpen(false)}
+						>
+							<Trans>貨架</Trans>
+						</Link>
+						<Link
+							to="/purchases"
+							className="flex h-11 items-center text-sm"
+							onClick={() => setMenuOpen(false)}
+						>
+							<Trans>採購</Trans>
+						</Link>
+					</nav>
+					<button
+						type="button"
+						className="mt-2 flex h-11 items-center text-sm"
+						onClick={() => void signOut()}
+					>
+						<Trans>登出</Trans>
+					</button>
+				</div>
+			)}
 		</header>
 	);
 }
