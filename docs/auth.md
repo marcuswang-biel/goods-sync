@@ -26,7 +26,7 @@ Client env: `VITE_CONVEX_URL` / `VITE_CONVEX_SITE_URL` (web) and `EXPO_PUBLIC_CO
 - Email: `dev@example.com` (凱) and `roommate@example.com` (阿澄)
 - Password: `devpassword` for both
 
-Both accounts belong to 公司茶水間. New accounts can also sign up from the web sign-in page; a new account has no space until it is added to one.
+Both accounts share one shelf. New accounts can also sign up from the web sign-in page; a new account has no shelf until it is added to one.
 
 ## Tests
 

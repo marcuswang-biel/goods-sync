@@ -1,7 +1,7 @@
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
 
-/** English codes; clients translate the label. */
+/** Legacy home/office codes. Optional, and cleared by `clearSpaceKind`. */
 export const spaceKindValidator = v.union(
 	v.literal('household'),
 	v.literal('partners'),
@@ -79,13 +79,13 @@ export const purchaseStatusValidator = v.union(v.literal('open'), v.literal('bou
 
 export default defineSchema({
 	/**
-	 * A shared place: a flat, a couple's home, or an office tea room.
-	 * Access is membership, checked on every read and write. `createdBy` is the
-	 * auth subject of the person who opened it.
+	 * Membership boundary for one shared shelf. Not a home or an office.
+	 * `kind` is optional only so older rows still validate until
+	 * `clearSpaceKind` removes it.
 	 */
 	spaces: defineTable({
 		name: v.string(),
-		kind: spaceKindValidator,
+		kind: v.optional(spaceKindValidator),
 		createdBy: v.string(),
 		createdAt: v.number(),
 	}).index('by_createdAt', ['createdAt']),

@@ -50,8 +50,27 @@ export const runAll = internalMutation({
 	returns: v.null(),
 	handler: async (ctx) => {
 		await ctx.runMutation(internal.migrations.foldPurchaseLines, {});
+		await ctx.runMutation(internal.migrations.clearSpaceKind, {});
 		if (releaseQueue.length > 0) {
 			await migrations.runSerially(ctx, releaseQueue);
+		}
+		return null;
+	},
+});
+
+/**
+ * Drops the old home/office classification. Idempotent: a row with no `kind`
+ * is left alone. The field stays optional in the schema until a later deploy
+ * removes it, after this has run on existing data.
+ */
+export const clearSpaceKind = internalMutation({
+	args: {},
+	returns: v.null(),
+	handler: async (ctx) => {
+		const spaces = await ctx.db.query('spaces').collect();
+		for (const space of spaces) {
+			if (space.kind === undefined) continue;
+			await ctx.db.patch('spaces', space._id, { kind: undefined });
 		}
 		return null;
 	},

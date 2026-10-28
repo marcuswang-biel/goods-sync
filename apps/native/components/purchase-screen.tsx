@@ -101,7 +101,7 @@ export function PurchaseScreen() {
 		}
 		const next = await clearSynced(queue, ids);
 		setQueue(next);
-		setNote('已合併到空間。');
+		setNote('已合併。');
 	};
 
 	const open = list?.purchases.filter((purchase) => purchase.status === 'open') ?? [];
@@ -109,7 +109,7 @@ export function PurchaseScreen() {
 
 	return (
 		<ScrollView style={styles.page} contentContainerStyle={styles.content}>
-			<Text style={styles.title}>{space?.name ?? '採購'}</Text>
+			<Text style={styles.title}>採購</Text>
 			<Text style={styles.money}>{formatCents(total)}</Text>
 			<Text style={styles.caption}>未採購合計</Text>
 			<View style={styles.switchRow}>
@@ -119,7 +119,7 @@ export function PurchaseScreen() {
 			{note && <Text style={styles.note}>{note}</Text>}
 			{queue.length > 0 && (
 				<Pressable style={styles.flush} onPress={() => void flush()}>
-					<Text style={styles.flushLabel}>合併 {queue.length} 筆到空間</Text>
+					<Text style={styles.flushLabel}>合併 {queue.length} 筆</Text>
 				</Pressable>
 			)}
 			<View style={styles.panel}>

@@ -25,7 +25,7 @@ function Overview() {
 		return (
 			<div aria-busy="true" className="px-4 py-8 lg:px-0">
 				<Skeleton className="h-4 w-40" />
-				<span className="sr-only">{t`正在讀你的空間。`}</span>
+				<span className="sr-only">{t`正在讀貨架。`}</span>
 			</div>
 		);
 	}
@@ -33,7 +33,7 @@ function Overview() {
 		return (
 			<div className="px-4 py-8 lg:px-0">
 				<Alert variant="destructive">
-					<AlertDescription>{t`讀不到空間，請再試一次。`}</AlertDescription>
+					<AlertDescription>{t`讀不到貨架，請再試一次。`}</AlertDescription>
 				</Alert>
 			</div>
 		);
@@ -43,7 +43,7 @@ function Overview() {
 			<div className="mx-auto max-w-[1128px] px-4 py-8 lg:px-0">
 				<Empty>
 					<EmptyHeader>
-						<EmptyDescription>{t`你還沒有加入任何空間。`}</EmptyDescription>
+						<EmptyDescription>{t`還沒有貨架。`}</EmptyDescription>
 					</EmptyHeader>
 				</Empty>
 			</div>
