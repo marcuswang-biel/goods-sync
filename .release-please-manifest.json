@@ -1,5 +1,5 @@
 {
 	"packages/backend": "0.4.0",
 	"apps/web": "0.5.0",
-	"apps/native": "0.5.0"
+	"apps/native": "0.5.1"
 }
