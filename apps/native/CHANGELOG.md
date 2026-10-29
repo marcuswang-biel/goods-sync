@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/marcuswang-biel/goods-sync/compare/native-v0.4.0...native-v0.5.0) (2026-10-29)
+
+
+### Features
+
+* **native:** finish the phone shelf, offline queue, and English ([#15](https://github.com/marcuswang-biel/goods-sync/issues/15)) ([6c3a854](https://github.com/marcuswang-biel/goods-sync/commit/6c3a8548d5aab32bbaa16ac3e8e4aec1bb262483))
+
 ## [0.4.0](https://github.com/marcuswang-biel/goods-sync/compare/native-v0.3.0...native-v0.4.0) (2026-10-28)
 
 
