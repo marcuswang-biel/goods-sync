@@ -3,9 +3,13 @@ import { Effect } from 'effect';
 
 import {
 	dropSynced,
+	enqueueItemCreate,
+	enqueueItemRemove,
 	enqueueMovement,
 	enqueuePurchaseAdd,
 	enqueuePurchaseBuy,
+	enqueuePurchaseQuantity,
+	enqueuePurchaseTrip,
 } from './offline-queue';
 
 describe('offline queue', () => {
@@ -32,6 +36,58 @@ describe('offline queue', () => {
 				clientMutationId: 'b',
 				causalParentClientId: 'a',
 			});
+		}),
+	);
+
+	it.effect('keeps a shelf edit until its id is cleared', () =>
+		Effect.gen(function* () {
+			const created = yield* enqueueItemCreate([], {
+				clientMutationId: 'new-milk',
+				name: '牛奶',
+				category: 'dairy',
+				unit: 'carton',
+				quantity: 2,
+				safetyQuantity: 1,
+				expiresOn: null,
+				shelf: 'fridge',
+				occurredAt: 10,
+			});
+			const removed = yield* enqueueItemRemove(created, {
+				clientMutationId: 'drop-milk',
+				itemId: 'milk',
+				occurredAt: 11,
+			});
+			const trip = yield* enqueuePurchaseTrip(removed, {
+				clientMutationId: 'trip',
+				totalCents: 1_800,
+				occurredAt: 12,
+				items: [{ itemId: 'milk', quantity: 2 }],
+			});
+			const quantity = yield* enqueuePurchaseQuantity(trip, {
+				clientMutationId: 'qty',
+				purchaseItemId: 'line',
+				quantity: 3,
+				occurredAt: 13,
+			});
+			const again = yield* enqueueItemCreate(quantity, {
+				clientMutationId: 'new-milk',
+				name: '牛奶',
+				category: 'dairy',
+				unit: 'carton',
+				quantity: 2,
+				safetyQuantity: 1,
+				expiresOn: null,
+				shelf: 'fridge',
+				occurredAt: 14,
+			});
+			expect(again.map((operation) => operation.tag)).toEqual([
+				'item-create',
+				'item-remove',
+				'purchase-trip',
+				'purchase-quantity',
+			]);
+			const remaining = yield* dropSynced(again, ['new-milk', 'qty']);
+			expect(remaining.map((operation) => operation.tag)).toEqual(['item-remove', 'purchase-trip']);
 		}),
 	);
 

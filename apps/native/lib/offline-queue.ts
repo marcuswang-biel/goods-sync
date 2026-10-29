@@ -1,6 +1,14 @@
 import type { OfflineOperation } from '@goods/domain/offline';
 
-import { dropSynced, enqueueMovement, enqueuePurchaseBuy } from '@goods/domain/offline';
+import {
+	dropSynced,
+	enqueueItemCreate,
+	enqueueItemRemove,
+	enqueueMovement,
+	enqueuePurchaseBuy,
+	enqueuePurchaseQuantity,
+	enqueuePurchaseTrip,
+} from '@goods/domain/offline';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Effect } from 'effect';
 
@@ -63,6 +71,79 @@ export async function queuePurchaseBuy(
 /** Drops operations whose ids the server has already applied. */
 export async function clearSynced(queue: readonly OfflineOperation[], ids: readonly string[]) {
 	const next = nextQueue(queue, dropSynced(queue, ids));
+	await save(next);
+	return next;
+}
+
+/** Appends a good and persists the queue. */
+export async function queueItemCreate(
+	queue: readonly OfflineOperation[],
+	request: {
+		clientMutationId: string;
+		name: string;
+		category:
+			| 'snack'
+			| 'coffee'
+			| 'tissue'
+			| 'dairy'
+			| 'fresh'
+			| 'paper'
+			| 'seasoning'
+			| 'supply'
+			| 'drink'
+			| 'staple'
+			| 'fruit'
+			| 'frozen'
+			| 'care';
+		unit: 'carton' | 'slab' | 'bag' | 'roll' | 'bottle' | 'ream' | 'can' | 'piece';
+		quantity: number;
+		safetyQuantity: number;
+		expiresOn: string | null;
+		shelf: 'fridge' | 'tearoom' | 'washroom' | 'sink' | 'cupboard' | 'printroom';
+		occurredAt: number;
+	},
+) {
+	const next = nextQueue(queue, enqueueItemCreate(queue, request));
+	await save(next);
+	return next;
+}
+
+/** Appends a delete and persists the queue. */
+export async function queueItemRemove(
+	queue: readonly OfflineOperation[],
+	request: { clientMutationId: string; itemId: string; occurredAt: number },
+) {
+	const next = nextQueue(queue, enqueueItemRemove(queue, request));
+	await save(next);
+	return next;
+}
+
+/** Appends one trip and persists the queue. */
+export async function queuePurchaseTrip(
+	queue: readonly OfflineOperation[],
+	request: {
+		clientMutationId: string;
+		totalCents: number;
+		occurredAt: number;
+		items: readonly { itemId: string; quantity: number }[];
+	},
+) {
+	const next = nextQueue(queue, enqueuePurchaseTrip(queue, request));
+	await save(next);
+	return next;
+}
+
+/** Appends a quantity edit and persists the queue. */
+export async function queuePurchaseQuantity(
+	queue: readonly OfflineOperation[],
+	request: {
+		clientMutationId: string;
+		purchaseItemId: string;
+		quantity: number;
+		occurredAt: number;
+	},
+) {
+	const next = nextQueue(queue, enqueuePurchaseQuantity(queue, request));
 	await save(next);
 	return next;
 }
