@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/marcuswang-biel/goods-sync/compare/native-v0.5.0...native-v0.5.1) (2026-10-29)
+
+
+### Bug Fixes
+
+* **native:** link the phone app to the expo project ([#17](https://github.com/marcuswang-biel/goods-sync/issues/17)) ([4542e56](https://github.com/marcuswang-biel/goods-sync/commit/4542e56c63c4292425bae014cf04504532b1ce16))
+
 ## [0.5.0](https://github.com/marcuswang-biel/goods-sync/compare/native-v0.4.0...native-v0.5.0) (2026-10-29)
 
 
