@@ -1,30 +1,44 @@
-import { api } from '@goods/backend/convex/_generated/api';
-import { useConvexAuth, useMutation } from 'convex/react';
-import { Stack } from 'expo-router';
+import { useConvexAuth } from 'convex/react';
+import { Slot } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 
-import { AuthProvider } from '@/auth';
+import { AuthProvider, SignInScreen } from '@/auth';
+import { EnsureShelf } from '@/components/ensure-shelf';
 import { convex } from '@/lib/convex';
+import { loadLocale } from '@/lib/copy';
 
-/** Gives a signed-in account their shelf before the home screen reads it. */
-function EnsureShelf() {
-	const { isAuthenticated } = useConvexAuth();
-	const ensure = useMutation(api.spaces.ensureMine);
-	useEffect(() => {
-		if (!isAuthenticated) return;
-		void ensure({});
-	}, [isAuthenticated, ensure]);
-	return null;
-}
-
-/** Phone shell: auth, then a stack titled 物資. */
+/** Phone shell: sign in, or the three tabs. */
 export default function RootLayout() {
+	useEffect(() => {
+		void loadLocale();
+	}, []);
 	return (
 		<AuthProvider client={convex}>
 			<EnsureShelf />
-			<Stack screenOptions={{ headerTitle: '物資' }} />
 			<StatusBar style="auto" />
+			<Gate />
 		</AuthProvider>
 	);
+}
+
+function Gate() {
+	const { isAuthenticated, isLoading } = useConvexAuth();
+	if (isLoading) {
+		return (
+			<View
+				style={{
+					flex: 1,
+					alignItems: 'center',
+					justifyContent: 'center',
+					backgroundColor: '#f2f4f7',
+				}}
+			>
+				<ActivityIndicator />
+			</View>
+		);
+	}
+	if (!isAuthenticated) return <SignInScreen />;
+	return <Slot />;
 }
