@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/marcuswang-biel/goods-sync/compare/web-v0.5.0...web-v0.6.0) (2026-10-30)
+
+
+### Features
+
+* **web:** compose the shelf screens with shadcn ([#19](https://github.com/marcuswang-biel/goods-sync/issues/19)) ([b71d86f](https://github.com/marcuswang-biel/goods-sync/commit/b71d86f970d919ec24d359f3f7b346853feda4f7))
+
 ## [0.5.0](https://github.com/marcuswang-biel/goods-sync/compare/web-v0.4.0...web-v0.5.0) (2026-10-28)
 
 
