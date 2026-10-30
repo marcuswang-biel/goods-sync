@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/marcuswang-biel/goods-sync/compare/web-v0.6.0...web-v0.7.0) (2026-10-30)
+
+
+### Features
+
+* **web:** put the shelf pages in a sidebar shell ([f095b14](https://github.com/marcuswang-biel/goods-sync/commit/f095b1418295baa9d21d41e2d95d74471623fd33))
+
 ## [0.6.0](https://github.com/marcuswang-biel/goods-sync/compare/web-v0.5.0...web-v0.6.0) (2026-10-30)
 
 
