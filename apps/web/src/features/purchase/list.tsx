@@ -9,10 +9,11 @@ import { Trans, useLingui } from '@lingui/react/macro';
 import { useQuery } from '@tanstack/react-query';
 import { Fragment, useState, type FormEvent } from 'react';
 
+import { PageFrame, PageTitle } from '@/components/page-frame';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Empty, EmptyDescription, EmptyHeader } from '@/components/ui/empty';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -91,16 +92,18 @@ export function PurchaseList({ spaceId }: { spaceId: Id<'spaces'> }) {
 	);
 
 	return (
-		<div className="flex w-full flex-col gap-3 px-4 py-6">
-			<div className="flex items-end justify-between gap-3">
-				<h1 className="text-2xl leading-none font-medium">
-					<Trans>採購</Trans>
-				</h1>
-				<p className="text-3xl leading-none font-bold tabular-nums">{formatCents(total)}</p>
-			</div>
-			<p className="text-muted-foreground text-sm">
-				<Trans>未採購合計</Trans>
-			</p>
+		<PageFrame>
+			<PageTitle>
+				<Trans>採購</Trans>
+			</PageTitle>
+			<Card className="w-full max-w-sm">
+				<CardHeader>
+					<CardDescription>
+						<Trans>未採購合計</Trans>
+					</CardDescription>
+					<CardTitle className="tabular-nums">{formatCents(total)}</CardTitle>
+				</CardHeader>
+			</Card>
 			{error && (
 				<Alert variant="destructive">
 					<AlertDescription>{error}</AlertDescription>
@@ -113,7 +116,7 @@ export function PurchaseList({ spaceId }: { spaceId: Id<'spaces'> }) {
 				onError={setError}
 			/>
 			<Card>
-				<CardHeader className="border-b">
+				<CardHeader>
 					<CardTitle>
 						<h2>
 							<Trans>採購記錄</Trans>
@@ -224,7 +227,7 @@ export function PurchaseList({ spaceId }: { spaceId: Id<'spaces'> }) {
 					)}
 				</CardContent>
 			</Card>
-		</div>
+		</PageFrame>
 	);
 }
 

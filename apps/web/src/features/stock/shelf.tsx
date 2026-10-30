@@ -9,6 +9,7 @@ import { Trans, useLingui } from '@lingui/react/macro';
 import { useQuery } from '@tanstack/react-query';
 import { Fragment, useState, type FormEvent, type ReactNode } from 'react';
 
+import { PageFrame, PageTitle } from '@/components/page-frame';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -117,11 +118,11 @@ export function ShelfTable({
 	};
 
 	return (
-		<div className="flex w-full flex-col gap-3 px-4 py-6">
-			<div className="flex items-baseline justify-between gap-3">
-				<h1 className="text-2xl leading-none font-medium">
+		<PageFrame>
+			<div className="flex items-end justify-between gap-4">
+				<PageTitle>
 					<Trans>貨架</Trans>
-				</h1>
+				</PageTitle>
 				<p className="text-muted-foreground text-sm tabular-nums">
 					<Trans>{items.length} 樣</Trans>
 				</p>
@@ -132,139 +133,151 @@ export function ShelfTable({
 					<AlertDescription>{error}</AlertDescription>
 				</Alert>
 			)}
-			<form onSubmit={(event) => event.preventDefault()}>
-				<Field className="max-w-sm">
-					<FieldLabel htmlFor="shelf-search">
-						<Trans>搜尋物資</Trans>
-					</FieldLabel>
-					<Input
-						id="shelf-search"
-						type="search"
-						value={query}
-						onChange={(event) => {
-							onSearch(event.target.value);
-						}}
-					/>
-				</Field>
-			</form>
-			{board.isPending ? (
-				<div aria-busy="true" className="flex flex-col gap-2">
-					<Skeleton className="h-4 w-48" />
-					<span className="sr-only">{t`正在讀貨架。`}</span>
-				</div>
-			) : (
-				<>
-					<Table className="hidden md:table">
-						<TableHeader>
-							<TableRow>
-								<TableHead>
-									<Trans>物資</Trans>
-								</TableHead>
-								<TableHead>
-									<Trans>貨架位置</Trans>
-								</TableHead>
-								<TableHead>
-									<Trans>在架上</Trans>
-								</TableHead>
-								<TableHead className="text-right">
-									<Trans>安全</Trans>
-								</TableHead>
-								<TableHead className="text-right">
-									<Trans>到期</Trans>
-								</TableHead>
-								<TableHead>
-									<span className="sr-only">
-										<Trans>領用或刪除</Trans>
-									</span>
-								</TableHead>
-							</TableRow>
-						</TableHeader>
-						<TableBody>
-							{items.length === 0 ? (
-								<TableRow>
-									<TableCell colSpan={6}>
-										<Empty>
-											<EmptyHeader>
-												<EmptyDescription>{emptyMessage}</EmptyDescription>
-											</EmptyHeader>
-										</Empty>
-									</TableCell>
-								</TableRow>
-							) : (
-								items.map((item) => (
-									<TableRow key={item._id}>
-										<TableCell>
-											<span className="inline-flex items-center gap-2">
-												{item.name}
-												{isExpiring(item.freshness) && (
-													<Badge variant="outline">
-														<Trans>即將過期</Trans>
-													</Badge>
-												)}
-												{!isExpiring(item.freshness) && isShort(item.supply) && (
-													<Badge variant="outline">
-														<Trans>不夠了</Trans>
-													</Badge>
-												)}
-											</span>
-										</TableCell>
-										<TableCell className="text-muted-foreground">
-											{t(SHELF_LABELS[item.shelf])}
-										</TableCell>
-										<TableCell>
-											<span className="flex w-full items-center justify-start gap-3">
-												<LevelBar quantity={item.quantity} safetyQuantity={item.safetyQuantity} />
-												<StockAmount
-													quantity={item.quantity}
-													unit={t(UNIT_LABELS[item.unit])}
-													safetyQuantity={item.safetyQuantity}
-												/>
-											</span>
-										</TableCell>
-										<TableCell className="text-muted-foreground text-right tabular-nums">
-											{item.safetyQuantity}
-										</TableCell>
-										<TableCell className="text-muted-foreground text-right tabular-nums">
-											{item.expiresOn ?? '—'}
-										</TableCell>
-										<TableCell className="text-right">
-											<div className="flex items-center justify-end gap-1">
-												{item.quantity > 0 && (
-													<Button
-														variant="ghost"
-														size="sm"
-														disabled={removingBusy}
-														onClick={() => void take(item._id, item.version)}
-													>
-														<Trans>領用</Trans>
-													</Button>
-												)}
-												<Button
-													variant="destructive"
-													size="sm"
-													disabled={removingBusy}
-													aria-label={t`刪除 ${item.name}`}
-													onClick={() => setRemoving({ id: item._id, name: item.name })}
-												>
-													<Trans>刪除</Trans>
-												</Button>
-											</div>
-										</TableCell>
-									</TableRow>
-								))
-							)}
-						</TableBody>
-					</Table>
-					{items.length === 0 ? (
-						<Empty className="md:hidden">
-							<EmptyHeader>
-								<EmptyDescription>{emptyMessage}</EmptyDescription>
-							</EmptyHeader>
-						</Empty>
+			<Card>
+				<CardHeader>
+					<CardTitle>
+						<h2>
+							<Trans>搜尋物資</Trans>
+						</h2>
+					</CardTitle>
+				</CardHeader>
+				<CardContent className="flex flex-col gap-(--card-spacing)">
+					<form onSubmit={(event) => event.preventDefault()}>
+						<Field className="max-w-sm">
+							<FieldLabel htmlFor="shelf-search" className="sr-only">
+								<Trans>搜尋物資</Trans>
+							</FieldLabel>
+							<Input
+								id="shelf-search"
+								type="search"
+								value={query}
+								onChange={(event) => {
+									onSearch(event.target.value);
+								}}
+							/>
+						</Field>
+					</form>
+					{board.isPending ? (
+						<div aria-busy="true" className="flex flex-col gap-2">
+							<Skeleton className="h-4 w-48" />
+							<span className="sr-only">{t`正在讀貨架。`}</span>
+						</div>
 					) : (
-						<Card className="md:hidden">
-							<CardContent>
-								<ItemGroup className="gap-0">
+						<>
+							<div className="hidden md:block">
+								<Table>
+									<TableHeader>
+										<TableRow>
+											<TableHead>
+												<Trans>物資</Trans>
+											</TableHead>
+											<TableHead>
+												<Trans>貨架位置</Trans>
+											</TableHead>
+											<TableHead>
+												<Trans>在架上</Trans>
+											</TableHead>
+											<TableHead className="text-right">
+												<Trans>安全</Trans>
+											</TableHead>
+											<TableHead className="text-right">
+												<Trans>到期</Trans>
+											</TableHead>
+											<TableHead>
+												<span className="sr-only">
+													<Trans>領用或刪除</Trans>
+												</span>
+											</TableHead>
+										</TableRow>
+									</TableHeader>
+									<TableBody>
+										{items.length === 0 ? (
+											<TableRow>
+												<TableCell colSpan={6}>
+													<Empty>
+														<EmptyHeader>
+															<EmptyDescription>{emptyMessage}</EmptyDescription>
+														</EmptyHeader>
+													</Empty>
+												</TableCell>
+											</TableRow>
+										) : (
+											items.map((item) => (
+												<TableRow key={item._id}>
+													<TableCell>
+														<span className="inline-flex items-center gap-2">
+															{item.name}
+															{isExpiring(item.freshness) && (
+																<Badge variant="outline">
+																	<Trans>即將過期</Trans>
+																</Badge>
+															)}
+															{!isExpiring(item.freshness) && isShort(item.supply) && (
+																<Badge variant="outline">
+																	<Trans>不夠了</Trans>
+																</Badge>
+															)}
+														</span>
+													</TableCell>
+													<TableCell className="text-muted-foreground">
+														{t(SHELF_LABELS[item.shelf])}
+													</TableCell>
+													<TableCell>
+														<span className="flex w-full items-center justify-start gap-3">
+															<LevelBar
+																quantity={item.quantity}
+																safetyQuantity={item.safetyQuantity}
+															/>
+															<StockAmount
+																quantity={item.quantity}
+																unit={t(UNIT_LABELS[item.unit])}
+																safetyQuantity={item.safetyQuantity}
+															/>
+														</span>
+													</TableCell>
+													<TableCell className="text-muted-foreground text-right tabular-nums">
+														{item.safetyQuantity}
+													</TableCell>
+													<TableCell className="text-muted-foreground text-right tabular-nums">
+														{item.expiresOn ?? '—'}
+													</TableCell>
+													<TableCell className="text-right">
+														<div className="flex items-center justify-end gap-1">
+															{item.quantity > 0 && (
+																<Button
+																	variant="ghost"
+																	size="sm"
+																	disabled={removingBusy}
+																	onClick={() => void take(item._id, item.version)}
+																>
+																	<Trans>領用</Trans>
+																</Button>
+															)}
+															<Button
+																variant="destructive"
+																size="sm"
+																disabled={removingBusy}
+																aria-label={t`刪除 ${item.name}`}
+																onClick={() => setRemoving({ id: item._id, name: item.name })}
+															>
+																<Trans>刪除</Trans>
+															</Button>
+														</div>
+													</TableCell>
+												</TableRow>
+											))
+										)}
+									</TableBody>
+								</Table>
+							</div>
+							{items.length === 0 ? (
+								<Empty className="md:hidden">
+									<EmptyHeader>
+										<EmptyDescription>{emptyMessage}</EmptyDescription>
+									</EmptyHeader>
+								</Empty>
+							) : (
+								<ItemGroup className="gap-0 md:hidden">
 									{items.map((item, index) => (
 										<Fragment key={item._id}>
 											{index > 0 && <ItemSeparator />}
@@ -310,18 +323,18 @@ export function ShelfTable({
 										</Fragment>
 									))}
 								</ItemGroup>
-							</CardContent>
-						</Card>
+							)}
+						</>
 					)}
-				</>
-			)}
+				</CardContent>
+			</Card>
 			<ConfirmRemove
 				name={removing?.name ?? null}
 				busy={removingBusy}
 				onClose={() => setRemoving(null)}
 				onConfirm={() => void confirmRemove()}
 			/>
-		</div>
+		</PageFrame>
 	);
 }
 
@@ -476,7 +489,7 @@ function AddItem({
 							labelOf={(code) => t(SHELF_LABELS[code])}
 							onValueChange={setShelf}
 						/>
-						<div className="md:self-end">
+						<div className="md:col-span-4 md:flex md:justify-end">
 							<Button type="submit">
 								<Trans>放上貨架</Trans>
 							</Button>
