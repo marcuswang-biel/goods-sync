@@ -35,6 +35,28 @@ describe('purchase rules', () => {
 		}),
 	);
 
+	it.effect('accepts 99 and rejects 100', () =>
+		Effect.gen(function* () {
+			expect(yield* draftPurchaseQuantity(99)).toBe(99);
+			const over = yield* Effect.flip(draftPurchaseQuantity(100));
+			expect(over._tag).toBe('InvalidPurchase');
+		}),
+	);
+
+	it.effect('rejects an empty trip and a zero total', () =>
+		Effect.gen(function* () {
+			const empty = yield* Effect.flip(draftPurchaseBasket({ totalCents: 100, items: [] }));
+			const free = yield* Effect.flip(
+				draftPurchaseBasket({
+					totalCents: 0,
+					items: [{ itemId: 'milk', quantity: 1 }],
+				}),
+			);
+			expect(empty._tag).toBe('InvalidPurchase');
+			expect(free._tag).toBe('InvalidPurchase');
+		}),
+	);
+
 	it.effect('rejects a basket that lists the same good twice', () =>
 		Effect.gen(function* () {
 			const error = yield* Effect.flip(

@@ -20,6 +20,23 @@ describe('shelf item', () => {
 		}),
 	);
 
+	it.effect('rejects a blank name', () =>
+		Effect.gen(function* () {
+			const exit = yield* Effect.exit(
+				draftShelfItem({
+					name: '   ',
+					category: 'snack',
+					unit: 'bag',
+					quantity: 1,
+					safetyQuantity: 1,
+					expiresOn: null,
+					shelf: 'cupboard',
+				}),
+			);
+			expect(Exit.isFailure(exit)).toBe(true);
+		}),
+	);
+
 	it.effect('rejects a calendar day that does not exist', () =>
 		Effect.gen(function* () {
 			const exit = yield* Effect.exit(

@@ -83,6 +83,13 @@ describe('stock', () => {
 
 		expect(second).toBe(first);
 		expect(mine).toMatchObject([{ _id: first, name: '貨架' }]);
+
+		const bob = await signIn(t, 'bob@example.com');
+		const bobs = await bob.as.mutation(api.spaces.ensureMine, {});
+		expect(bobs).not.toBe(first);
+		expect(await codeOf(bob.as.query(api.stock.board, { spaceId: first, today }))).toBe(
+			APP_ERROR_CODES.notFound,
+		);
 		const board = await alice.as.query(api.stock.board, { spaceId: first, today });
 		expect(board.items).toEqual([]);
 	});
@@ -430,6 +437,263 @@ describe('stock.remove', () => {
 			],
 		});
 		expect(bought[0]).toMatchObject({ outcome: 'applied', rejectionCode: null });
+	});
+});
+
+describe('purchases.setQuantity', () => {
+	it('changes an open line and refuses a bought trip or a bad number', async () => {
+		const t = convexTest(schema, modules);
+		const alice = await signIn(t, 'alice@example.com');
+		const stranger = await signIn(t, 'cara@example.com');
+		const { spaceId, itemId } = await shelf(t, alice.userId, alice.userId);
+
+		await alice.as.mutation(api.purchases.sync, {
+			spaceId,
+			ops: [
+				{
+					tag: 'add',
+					clientMutationId: 'trip-qty',
+					totalCents: 200,
+					occurredAt: 10,
+					items: [{ itemId, quantity: 2 }],
+				},
+			],
+		});
+		const open = await alice.as.query(api.purchases.list, { spaceId });
+		const lineId = open.purchases[0]?.items[0]?._id;
+		if (lineId === undefined) throw new Error('expected a purchase line');
+
+		expect(
+			await codeOf(
+				stranger.as.mutation(api.purchases.setQuantity, {
+					spaceId,
+					purchaseItemId: lineId,
+					quantity: 3,
+				}),
+			),
+		).toBe(APP_ERROR_CODES.notFound);
+		expect(
+			await codeOf(
+				alice.as.mutation(api.purchases.setQuantity, {
+					spaceId,
+					purchaseItemId: lineId,
+					quantity: 0,
+				}),
+			),
+		).toBe(APP_ERROR_CODES.purchaseInvalid);
+
+		expect(
+			await alice.as.mutation(api.purchases.setQuantity, {
+				spaceId,
+				purchaseItemId: lineId,
+				quantity: 5,
+			}),
+		).toBeNull();
+		const changed = await alice.as.query(api.purchases.list, { spaceId });
+		expect(changed.purchases[0]?.items[0]?.quantity).toBe(5);
+
+		await alice.as.mutation(api.purchases.sync, {
+			spaceId,
+			ops: [
+				{
+					tag: 'buy',
+					clientMutationId: 'buy-qty',
+					purchaseClientMutationId: 'trip-qty',
+					occurredAt: 20,
+				},
+			],
+		});
+		expect(
+			await codeOf(
+				alice.as.mutation(api.purchases.setQuantity, {
+					spaceId,
+					purchaseItemId: lineId,
+					quantity: 4,
+				}),
+			),
+		).toBe(APP_ERROR_CODES.purchaseInvalid);
+	});
+});
+
+describe('purchase rejections', () => {
+	it('rejects a free trip, a missing good, and a second copy of the same trip', async () => {
+		const t = convexTest(schema, modules);
+		const alice = await signIn(t, 'alice@example.com');
+		const { spaceId, itemId } = await shelf(t, alice.userId, alice.userId);
+
+		const rejected = await alice.as.mutation(api.purchases.sync, {
+			spaceId,
+			ops: [
+				{
+					tag: 'add',
+					clientMutationId: 'free',
+					totalCents: 0,
+					occurredAt: 1,
+					items: [{ itemId, quantity: 1 }],
+				},
+			],
+		});
+		expect(rejected[0]).toMatchObject({ outcome: 'rejected', rejectionCode: 'PURCHASE_INVALID' });
+
+		const added = await alice.as.mutation(api.purchases.sync, {
+			spaceId,
+			ops: [
+				{
+					tag: 'add',
+					clientMutationId: 'trip-copy',
+					totalCents: 100,
+					occurredAt: 2,
+					items: [{ itemId, quantity: 1 }],
+				},
+			],
+		});
+		expect(added[0]?.outcome).toBe('applied');
+		const copy = await alice.as.mutation(api.purchases.sync, {
+			spaceId,
+			ops: [
+				{
+					tag: 'add',
+					clientMutationId: 'trip-copy',
+					totalCents: 100,
+					occurredAt: 3,
+					items: [{ itemId, quantity: 1 }],
+				},
+			],
+		});
+		expect(copy[0]?.outcome).toBe('duplicate');
+
+		const missing = await alice.as.mutation(api.purchases.sync, {
+			spaceId,
+			ops: [
+				{
+					tag: 'buy',
+					clientMutationId: 'buy-missing',
+					purchaseClientMutationId: 'no-such-trip',
+					occurredAt: 4,
+				},
+			],
+		});
+		expect(missing[0]).toMatchObject({ outcome: 'rejected', rejectionCode: 'NOT_FOUND' });
+
+		const tooMany = Array.from({ length: 41 }, (_, index) => ({
+			tag: 'buy' as const,
+			clientMutationId: `bulk-${index}`,
+			purchaseClientMutationId: 'no-such-trip',
+			occurredAt: index,
+		}));
+		expect(await codeOf(alice.as.mutation(api.purchases.sync, { spaceId, ops: tooMany }))).toBe(
+			APP_ERROR_CODES.purchaseInvalid,
+		);
+	});
+});
+
+describe('stock.sync limits', () => {
+	it('rejects a missing good and a batch that is too large', async () => {
+		const t = convexTest(schema, modules);
+		const alice = await signIn(t, 'alice@example.com');
+		const bob = await signIn(t, 'bob@example.com');
+		const mine = await shelf(t, alice.userId, alice.userId);
+		const theirs = await shelf(t, bob.userId, bob.userId);
+		const take = {
+			clientMutationId: 'take-1',
+			kind: 'consume' as const,
+			quantity: 1,
+			occurredAt: 1,
+			causalParentClientId: null,
+			observedVersion: 0,
+		};
+
+		expect(
+			await codeOf(
+				alice.as.mutation(api.stock.sync, {
+					spaceId: mine.spaceId,
+					itemId: theirs.itemId,
+					ops: [take],
+				}),
+			),
+		).toBe(APP_ERROR_CODES.notFound);
+
+		const ops = Array.from({ length: 41 }, (_, index) => ({
+			...take,
+			clientMutationId: `take-${index}`,
+			occurredAt: index,
+		}));
+		expect(
+			await codeOf(
+				alice.as.mutation(api.stock.sync, {
+					spaceId: mine.spaceId,
+					itemId: mine.itemId,
+					ops,
+				}),
+			),
+		).toBe(APP_ERROR_CODES.stockInvalid);
+	});
+});
+
+describe('clearSpaceKind', () => {
+	it('drops the old home and office field and leaves a shelf that has none', async () => {
+		const t = convexTest(schema, modules);
+		const ids = await t.run(async (ctx) => {
+			const office = await ctx.db.insert('spaces', {
+				name: '貨架',
+				kind: 'office',
+				createdBy: 'someone',
+				createdAt: 1,
+			});
+			const plain = await ctx.db.insert('spaces', {
+				name: '貨架',
+				createdBy: 'someone',
+				createdAt: 2,
+			});
+			return { office, plain };
+		});
+
+		expect(await t.mutation(internal.migrations.clearSpaceKind, {})).toBeNull();
+		expect(await t.mutation(internal.migrations.clearSpaceKind, {})).toBeNull();
+
+		const stored = await t.run(async (ctx) => {
+			const office = await ctx.db.get('spaces', ids.office);
+			const plain = await ctx.db.get('spaces', ids.plain);
+			return { office: office?.kind, plain: plain?.kind };
+		});
+		expect(stored).toEqual({ office: undefined, plain: undefined });
+	});
+});
+
+describe('foldPurchaseLines bought rows', () => {
+	it('keeps a bought line as its own trip', async () => {
+		const t = convexTest(schema, modules);
+		const alice = await signIn(t, 'alice@example.com');
+		const { spaceId, itemId } = await shelf(t, alice.userId, alice.userId);
+		await t.run(async (ctx) => {
+			await ctx.db.insert('purchaseLines', {
+				spaceId,
+				clientMutationId: 'old-bought',
+				name: '咖啡豆',
+				quantity: 1,
+				estimatedCents: 2_400,
+				linkedItemId: itemId,
+				status: 'bought',
+				createdBy: alice.userId,
+				createdAt: 5,
+				boughtBy: alice.userId,
+				boughtAt: 6,
+			});
+		});
+
+		await t.mutation(internal.migrations.foldPurchaseLines, {});
+		await t.mutation(internal.migrations.foldPurchaseLines, {});
+
+		const list = await alice.as.query(api.purchases.list, { spaceId });
+		expect(list.purchases).toHaveLength(1);
+		expect(list.purchases[0]).toMatchObject({
+			status: 'bought',
+			totalCents: 2_400,
+			clientMutationId: 'old-bought',
+		});
+		expect(list.purchases[0]?.items).toEqual([
+			expect.objectContaining({ name: '咖啡豆', quantity: 1, itemId, unit: 'bag' }),
+		]);
 	});
 });
 

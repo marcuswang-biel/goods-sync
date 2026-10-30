@@ -1,7 +1,7 @@
 import { describe, expect, it } from '@effect/vitest';
 import { Effect } from 'effect';
 
-import { assessStock, isAttention, type ShelfRow } from './assess-stock';
+import { assessStock, isAttention, isExpiring, isShort, type ShelfRow } from './assess-stock';
 import { InvalidStock } from './errors';
 import { stockPolicyLayer } from './stock-policy';
 
@@ -86,6 +86,18 @@ describe('assessStock', () => {
 			expect(error).toBeInstanceOf(InvalidStock);
 		}).pipe(Effect.provide(policy)),
 	);
+});
+
+describe('isExpiring and isShort', () => {
+	it('flags soon, expired, low, and out', () => {
+		expect(isExpiring('soon')).toBe(true);
+		expect(isExpiring('expired')).toBe(true);
+		expect(isExpiring('ok')).toBe(false);
+		expect(isExpiring('undated')).toBe(false);
+		expect(isShort('low')).toBe(true);
+		expect(isShort('out')).toBe(true);
+		expect(isShort('ok')).toBe(false);
+	});
 });
 
 describe('isAttention', () => {

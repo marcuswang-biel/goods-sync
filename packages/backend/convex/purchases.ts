@@ -85,7 +85,7 @@ export const list = query({
 			.query('purchases')
 			.withIndex('by_space', (q) => q.eq('spaceId', args.spaceId))
 			.collect();
-		const ordered = stored.toSorted((left, right) => left.createdAt - right.createdAt);
+		const ordered = stored.slice().sort((left, right) => left.createdAt - right.createdAt);
 		const goods = await ctx.db
 			.query('purchaseItems')
 			.withIndex('by_space', (q) => q.eq('spaceId', args.spaceId))
@@ -95,7 +95,7 @@ export const list = query({
 		for (const purchase of ordered) {
 			const items = goods
 				.filter((good) => good.purchaseId === purchase._id)
-				.toSorted((left, right) => left._creationTime - right._creationTime)
+				.sort((left, right) => left._creationTime - right._creationTime)
 				.map((good) => ({
 					_id: good._id,
 					itemId: good.itemId,
@@ -185,7 +185,7 @@ export const sync = mutation({
 		const adds = args.ops.filter((operation) => operation.tag === 'add');
 		const buys = args.ops
 			.filter((operation) => operation.tag === 'buy')
-			.toSorted((left, right) => left.occurredAt - right.occurredAt);
+			.sort((left, right) => left.occurredAt - right.occurredAt);
 
 		for (const operation of adds) {
 			const existing = await ctx.db
