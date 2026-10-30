@@ -1,8 +1,13 @@
+/** Comma-groups a non-negative whole number. Hermes has no en-HK locale data. */
+function groupThousands(value: number): string {
+	return String(value).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
 /** HK$ with grouped whole dollars and two cents, no space after the sign. */
 export function formatCents(cents: number): string {
 	const negative = cents < 0;
 	const absolute = Math.abs(cents);
-	const dollars = Math.floor(absolute / 100).toLocaleString('en-HK');
+	const dollars = groupThousands(Math.floor(absolute / 100));
 	const fraction = String(absolute % 100).padStart(2, '0');
 	return `${negative ? '-' : ''}HK$${dollars}.${fraction}`;
 }

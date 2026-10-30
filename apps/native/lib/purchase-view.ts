@@ -46,5 +46,5 @@ export function shortfallRows<ItemId extends string>(
 				},
 			];
 		})
-		.toSorted((left, right) => right.buy - left.buy);
+		.sort((left, right) => right.buy - left.buy);
 }
