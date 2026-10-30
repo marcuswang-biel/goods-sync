@@ -1,3 +1,4 @@
+import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 
@@ -7,10 +8,7 @@ export function remainingPercent(quantity: number, safetyQuantity: number): numb
 	return Math.round((quantity / safetyQuantity) * 100);
 }
 
-/**
- * Gray is the safety line, always the full length. Black covers it up to that
- * line and stops at 100, even when more than the line is on the shelf.
- */
+/** Full track is the safety line. The fill stops at 100 even when the shelf holds more. */
 export function LevelBar({
 	quantity,
 	safetyQuantity,
@@ -23,12 +21,7 @@ export function LevelBar({
 	const ratio = safetyQuantity > 0 ? quantity / safetyQuantity : quantity > 0 ? 1 : 0;
 	const covered = Math.min(ratio, 1) * 100;
 
-	return (
-		<div className={cn('relative h-2', className)} aria-hidden="true">
-			<div className="bg-input absolute inset-0" />
-			<div className="bg-foreground absolute inset-y-0 left-0" style={{ width: `${covered}%` }} />
-		</div>
-	);
+	return <Progress value={covered} aria-hidden="true" className={className} />;
 }
 
 /** Quantity, a rule, then the percent of the safety line. The slots stay left-aligned across rows. */

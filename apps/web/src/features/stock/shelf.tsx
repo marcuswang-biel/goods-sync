@@ -7,7 +7,7 @@ import { convexErrorCode } from '@goods/shared/convex-error';
 import { isAppErrorCode } from '@goods/shared/error-codes';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { useQuery } from '@tanstack/react-query';
-import { useState, type FormEvent, type ReactNode } from 'react';
+import { Fragment, useState, type FormEvent, type ReactNode } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +16,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Empty, EmptyDescription, EmptyHeader } from '@/components/ui/empty';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import {
+	Item,
+	ItemActions,
+	ItemContent,
+	ItemDescription,
+	ItemGroup,
+	ItemSeparator,
+	ItemTitle,
+} from '@/components/ui/item';
 import {
 	Select,
 	SelectContent,
@@ -253,52 +262,56 @@ export function ShelfTable({
 							</EmptyHeader>
 						</Empty>
 					) : (
-						<ul className="bg-card ring-foreground/10 flex flex-col rounded-xl ring-1 md:hidden">
-							{items.map((item) => (
-								<li
-									key={item._id}
-									className="flex min-h-11 items-center gap-3 border-b px-4 py-2 last:border-b-0"
-								>
-									<div className="min-w-0">
-										<p className="truncate text-sm">{item.name}</p>
-										<p className="text-muted-foreground text-xs">
-											{t(SHELF_LABELS[item.shelf])} · {item.expiresOn ?? '—'}
-										</p>
-									</div>
-									<div className="flex items-center gap-3">
-										<LevelBar
-											quantity={item.quantity}
-											safetyQuantity={item.safetyQuantity}
-											className="w-16 shrink-0"
-										/>
-										<StockAmount
-											quantity={item.quantity}
-											unit={t(UNIT_LABELS[item.unit])}
-											safetyQuantity={item.safetyQuantity}
-										/>
-										{item.quantity > 0 && (
-											<Button
-												variant="ghost"
-												size="sm"
-												disabled={removingBusy}
-												onClick={() => void take(item._id, item.version)}
-											>
-												<Trans>領用</Trans>
-											</Button>
-										)}
-										<Button
-											variant="destructive"
-											size="sm"
-											disabled={removingBusy}
-											aria-label={t`刪除 ${item.name}`}
-											onClick={() => setRemoving({ id: item._id, name: item.name })}
-										>
-											<Trans>刪除</Trans>
-										</Button>
-									</div>
-								</li>
-							))}
-						</ul>
+						<Card className="md:hidden">
+							<CardContent>
+								<ItemGroup className="gap-0">
+									{items.map((item, index) => (
+										<Fragment key={item._id}>
+											{index > 0 && <ItemSeparator />}
+											<Item size="sm">
+												<ItemContent className="min-w-0">
+													<ItemTitle>{item.name}</ItemTitle>
+													<ItemDescription>
+														{t(SHELF_LABELS[item.shelf])} · {item.expiresOn ?? '—'}
+													</ItemDescription>
+												</ItemContent>
+												<ItemActions>
+													<LevelBar
+														quantity={item.quantity}
+														safetyQuantity={item.safetyQuantity}
+														className="w-16 shrink-0"
+													/>
+													<StockAmount
+														quantity={item.quantity}
+														unit={t(UNIT_LABELS[item.unit])}
+														safetyQuantity={item.safetyQuantity}
+													/>
+													{item.quantity > 0 && (
+														<Button
+															variant="ghost"
+															size="sm"
+															disabled={removingBusy}
+															onClick={() => void take(item._id, item.version)}
+														>
+															<Trans>領用</Trans>
+														</Button>
+													)}
+													<Button
+														variant="destructive"
+														size="sm"
+														disabled={removingBusy}
+														aria-label={t`刪除 ${item.name}`}
+														onClick={() => setRemoving({ id: item._id, name: item.name })}
+													>
+														<Trans>刪除</Trans>
+													</Button>
+												</ItemActions>
+											</Item>
+										</Fragment>
+									))}
+								</ItemGroup>
+							</CardContent>
+						</Card>
 					)}
 				</>
 			)}
@@ -392,83 +405,81 @@ function AddItem({
 			</CardHeader>
 			<CardContent>
 				<form onSubmit={(event) => void submit(event)}>
-					<FieldGroup>
-						<div className="grid gap-5 md:grid-cols-4">
-							<Field className="md:col-span-2">
-								<FieldLabel htmlFor="item-name">
-									<Trans>名稱</Trans>
-								</FieldLabel>
-								<Input
-									id="item-name"
-									value={name}
-									onChange={(event) => setName(event.target.value)}
-									required
-								/>
-							</Field>
-							<CodeSelect
-								id="item-category"
-								label={<Trans>種類</Trans>}
-								value={category}
-								codes={categoryCodes}
-								labelOf={(code) => t(CATEGORY_LABELS[code])}
-								onValueChange={setCategory}
+					<FieldGroup className="md:grid md:grid-cols-4">
+						<Field className="md:col-span-2">
+							<FieldLabel htmlFor="item-name">
+								<Trans>名稱</Trans>
+							</FieldLabel>
+							<Input
+								id="item-name"
+								value={name}
+								onChange={(event) => setName(event.target.value)}
+								required
 							/>
-							<CodeSelect
-								id="item-unit"
-								label={<Trans>規格</Trans>}
-								value={unit}
-								codes={unitCodes}
-								labelOf={(code) => t(UNIT_LABELS[code])}
-								onValueChange={setUnit}
+						</Field>
+						<CodeSelect
+							id="item-category"
+							label={<Trans>種類</Trans>}
+							value={category}
+							codes={categoryCodes}
+							labelOf={(code) => t(CATEGORY_LABELS[code])}
+							onValueChange={setCategory}
+						/>
+						<CodeSelect
+							id="item-unit"
+							label={<Trans>規格</Trans>}
+							value={unit}
+							codes={unitCodes}
+							labelOf={(code) => t(UNIT_LABELS[code])}
+							onValueChange={setUnit}
+						/>
+						<Field>
+							<FieldLabel htmlFor="item-quantity">
+								<Trans>數量</Trans>
+							</FieldLabel>
+							<Input
+								id="item-quantity"
+								value={quantity}
+								onChange={(event) => setQuantity(event.target.value)}
+								inputMode="numeric"
+								className="tabular-nums"
 							/>
-							<Field>
-								<FieldLabel htmlFor="item-quantity">
-									<Trans>數量</Trans>
-								</FieldLabel>
-								<Input
-									id="item-quantity"
-									value={quantity}
-									onChange={(event) => setQuantity(event.target.value)}
-									inputMode="numeric"
-									className="tabular-nums"
-								/>
-							</Field>
-							<Field>
-								<FieldLabel htmlFor="item-safety">
-									<Trans>安全警戒</Trans>
-								</FieldLabel>
-								<Input
-									id="item-safety"
-									value={safety}
-									onChange={(event) => setSafety(event.target.value)}
-									inputMode="numeric"
-									className="tabular-nums"
-								/>
-							</Field>
-							<Field>
-								<FieldLabel htmlFor="item-expires">
-									<Trans>到期</Trans>
-								</FieldLabel>
-								<Input
-									id="item-expires"
-									type="date"
-									value={expiresOn}
-									onChange={(event) => setExpiresOn(event.target.value)}
-								/>
-							</Field>
-							<CodeSelect
-								id="item-shelf"
-								label={<Trans>貨架位置</Trans>}
-								value={shelf}
-								codes={shelfCodes}
-								labelOf={(code) => t(SHELF_LABELS[code])}
-								onValueChange={setShelf}
+						</Field>
+						<Field>
+							<FieldLabel htmlFor="item-safety">
+								<Trans>安全警戒</Trans>
+							</FieldLabel>
+							<Input
+								id="item-safety"
+								value={safety}
+								onChange={(event) => setSafety(event.target.value)}
+								inputMode="numeric"
+								className="tabular-nums"
 							/>
-							<div className="md:self-end">
-								<Button type="submit">
-									<Trans>放上貨架</Trans>
-								</Button>
-							</div>
+						</Field>
+						<Field>
+							<FieldLabel htmlFor="item-expires">
+								<Trans>到期</Trans>
+							</FieldLabel>
+							<Input
+								id="item-expires"
+								type="date"
+								value={expiresOn}
+								onChange={(event) => setExpiresOn(event.target.value)}
+							/>
+						</Field>
+						<CodeSelect
+							id="item-shelf"
+							label={<Trans>貨架位置</Trans>}
+							value={shelf}
+							codes={shelfCodes}
+							labelOf={(code) => t(SHELF_LABELS[code])}
+							onValueChange={setShelf}
+						/>
+						<div className="md:self-end">
+							<Button type="submit">
+								<Trans>放上貨架</Trans>
+							</Button>
 						</div>
 					</FieldGroup>
 				</form>
@@ -493,10 +504,13 @@ function CodeSelect<Code extends string>({
 	labelOf: (code: Code) => string;
 	onValueChange: (code: Code) => void;
 }) {
+	const items = codes.map((code) => ({ value: code, label: labelOf(code) }));
+
 	return (
 		<Field>
 			<FieldLabel htmlFor={id}>{label}</FieldLabel>
 			<Select
+				items={items}
 				value={value}
 				onValueChange={(next) => {
 					if (next !== null && codes.some((code) => code === next)) onValueChange(next);
