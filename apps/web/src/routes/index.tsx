@@ -23,7 +23,7 @@ function Overview() {
 	const { active, isPending, isError } = useActiveSpace();
 	if (isPending) {
 		return (
-			<div aria-busy="true" className="px-4 py-8 lg:px-0">
+			<div aria-busy="true" className="px-6 py-8 lg:px-6">
 				<Skeleton className="h-4 w-40" />
 				<span className="sr-only">{t`正在讀貨架。`}</span>
 			</div>
@@ -31,7 +31,7 @@ function Overview() {
 	}
 	if (isError) {
 		return (
-			<div className="px-4 py-8 lg:px-0">
+			<div className="px-6 py-8">
 				<Alert variant="destructive">
 					<AlertDescription>{t`讀不到貨架，請再試一次。`}</AlertDescription>
 				</Alert>
@@ -40,7 +40,7 @@ function Overview() {
 	}
 	if (!active) {
 		return (
-			<div className="w-full px-4 py-8">
+			<div className="w-full px-6 py-8">
 				<Empty>
 					<EmptyHeader>
 						<EmptyDescription>{t`還沒有貨架。`}</EmptyDescription>

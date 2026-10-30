@@ -10,11 +10,12 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { Fragment, useState } from 'react';
 
+import { PageFrame, PageTitle } from '@/components/page-frame';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Empty, EmptyDescription, EmptyHeader } from '@/components/ui/empty';
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader } from '@/components/ui/empty';
 import {
 	Item,
 	ItemActions,
@@ -92,7 +93,7 @@ export function Board({ spaceId }: { spaceId: Id<'spaces'> }) {
 
 	if (board.isPending) {
 		return (
-			<div aria-busy="true" className="px-4 py-8 lg:px-0">
+			<div aria-busy="true" className="px-6 py-8">
 				<Skeleton className="h-4 w-48" />
 				<span className="sr-only">{t`正在讀貨架。`}</span>
 			</div>
@@ -100,7 +101,7 @@ export function Board({ spaceId }: { spaceId: Id<'spaces'> }) {
 	}
 	if (board.isError || !board.data) {
 		return (
-			<div className="px-4 py-8 lg:px-0">
+			<div className="px-6 py-8">
 				<Alert variant="destructive">
 					<AlertDescription>{t`讀不到貨架，請再試一次。`}</AlertDescription>
 				</Alert>
@@ -116,10 +117,10 @@ export function Board({ spaceId }: { spaceId: Id<'spaces'> }) {
 	const shelves = [...new Set(items.map((item) => item.shelf))];
 
 	return (
-		<div className="flex w-full flex-col gap-3 px-4 py-6">
-			<h1 className="text-2xl leading-none font-medium">
+		<PageFrame>
+			<PageTitle>
 				<Trans>看板</Trans>
-			</h1>
+			</PageTitle>
 
 			{error && (
 				<Alert variant="destructive">
@@ -127,7 +128,7 @@ export function Board({ spaceId }: { spaceId: Id<'spaces'> }) {
 				</Alert>
 			)}
 
-			<div className="grid grid-cols-12 items-start gap-3">
+			<div className="grid grid-cols-12 items-start gap-4">
 				<Card className="col-span-12 lg:col-span-8">
 					<CardHeader>
 						<CardTitle>
@@ -153,6 +154,11 @@ export function Board({ spaceId }: { spaceId: Id<'spaces'> }) {
 										<Trans>還沒有物資。</Trans>
 									</EmptyDescription>
 								</EmptyHeader>
+								<EmptyContent>
+									<Button nativeButton={false} render={<Link to="/stock" search={{ q: '' }} />}>
+										<Trans>放上貨架</Trans>
+									</Button>
+								</EmptyContent>
 							</Empty>
 						) : (
 							<div className="flex flex-col gap-3">
@@ -251,7 +257,7 @@ export function Board({ spaceId }: { spaceId: Id<'spaces'> }) {
 				</Card>
 			</div>
 
-			<div className="grid grid-cols-12 items-start gap-3">
+			<div className="grid grid-cols-12 items-start gap-4">
 				<Queue
 					title={t`即將過期`}
 					rows={expiring}
@@ -266,7 +272,7 @@ export function Board({ spaceId }: { spaceId: Id<'spaces'> }) {
 					purchase
 				/>
 			</div>
-		</div>
+		</PageFrame>
 	);
 }
 

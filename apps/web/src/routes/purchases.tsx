@@ -22,7 +22,7 @@ function PurchasesPage() {
 	const { active, isPending } = useActiveSpace();
 	if (isPending) {
 		return (
-			<div aria-busy="true" className="px-4 py-8">
+			<div aria-busy="true" className="px-6 py-8">
 				<Skeleton className="h-4 w-40" />
 				<span className="sr-only">{t`正在讀貨架。`}</span>
 			</div>
@@ -30,7 +30,7 @@ function PurchasesPage() {
 	}
 	if (!active) {
 		return (
-			<div className="px-4 py-8">
+			<div className="px-6 py-8">
 				<Empty>
 					<EmptyHeader>
 						<EmptyDescription>{t`還沒有貨架。`}</EmptyDescription>
