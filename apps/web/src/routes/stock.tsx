@@ -2,6 +2,8 @@ import { useLingui } from '@lingui/react/macro';
 import { createFileRoute } from '@tanstack/react-router';
 
 import { RequireAuth } from '@/components/require-auth';
+import { Empty, EmptyDescription, EmptyHeader } from '@/components/ui/empty';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useActiveSpace } from '@/features/space/space';
 import { ShelfTable } from '@/features/stock/shelf';
 
@@ -27,8 +29,25 @@ function StockPage() {
 	const navigate = Route.useNavigate();
 	const { active, isPending } = useActiveSpace();
 	const { t } = useLingui();
-	if (isPending) return <p className="px-4 py-8 text-sm">{t`正在讀貨架。`}</p>;
-	if (!active) return <p className="px-4 py-8 text-sm">{t`還沒有貨架。`}</p>;
+	if (isPending) {
+		return (
+			<div aria-busy="true" className="px-4 py-8">
+				<Skeleton className="h-4 w-40" />
+				<span className="sr-only">{t`正在讀貨架。`}</span>
+			</div>
+		);
+	}
+	if (!active) {
+		return (
+			<div className="px-4 py-8">
+				<Empty>
+					<EmptyHeader>
+						<EmptyDescription>{t`還沒有貨架。`}</EmptyDescription>
+					</EmptyHeader>
+				</Empty>
+			</div>
+		);
+	}
 	return (
 		<ShelfTable
 			spaceId={active._id}

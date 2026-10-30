@@ -7,7 +7,7 @@ import { convexErrorCode } from '@goods/shared/convex-error';
 import { isAppErrorCode } from '@goods/shared/error-codes';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { useQuery } from '@tanstack/react-query';
-import { useState, type FormEvent } from 'react';
+import { Fragment, useState, type FormEvent } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +16,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Empty, EmptyDescription, EmptyHeader } from '@/components/ui/empty';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import {
+	Item,
+	ItemActions,
+	ItemContent,
+	ItemDescription,
+	ItemFooter,
+	ItemGroup,
+	ItemSeparator,
+	ItemTitle,
+} from '@/components/ui/item';
 import { Pagination, PaginationContent, PaginationItem } from '@/components/ui/pagination';
+import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { REJECTION_MESSAGES, STOCK_ERROR_MESSAGES } from '@/features/stock/errors';
 import { UNIT_LABELS } from '@/features/stock/labels';
@@ -122,88 +133,94 @@ export function PurchaseList({ spaceId }: { spaceId: Id<'spaces'> }) {
 							</EmptyHeader>
 						</Empty>
 					) : (
-						<ul>
-							{visible.map((purchase) => (
-								<li key={purchase._id} className="border-b py-3 last:border-b-0">
-									<ul>
-										{purchase.items.map((item) => (
-											<li key={item._id} className="flex min-h-11 items-center gap-3">
-												<div className="min-w-0 flex-1">
-													<p className="truncate text-sm">{item.name}</p>
+						<ItemGroup className="gap-0">
+							{visible.map((purchase, index) => (
+								<Fragment key={purchase._id}>
+									{index > 0 && <ItemSeparator />}
+									<Item size="sm">
+										<ItemContent className="min-w-0">
+											{purchase.items.map((item) => (
+												<Fragment key={item._id}>
+													<ItemTitle>{item.name}</ItemTitle>
 													{purchase.status === 'open' ? (
 														<BuyAmount spaceId={spaceId} item={item} onError={setError} />
 													) : (
-														<p className="text-muted-foreground text-xs">
+														<ItemDescription>
 															<Trans>補 {item.quantity}</Trans>
 															{item.unit ? ` ${t(UNIT_LABELS[item.unit])}` : ''}
-														</p>
+														</ItemDescription>
 													)}
-												</div>
-											</li>
-										))}
-									</ul>
-									<div className="flex min-h-11 items-center justify-end gap-3">
-										{purchase.status === 'bought' && (
-											<Badge variant="secondary" className="mr-auto">
-												<Trans>已採購</Trans>
-											</Badge>
-										)}
-										<p className="text-sm font-bold tabular-nums">
-											{formatCents(purchase.totalCents)}
-										</p>
-										{purchase.status === 'open' && (
-											<Button
-												variant={purchase._id === firstOpen?._id ? 'default' : 'ghost'}
-												size="sm"
-												onClick={() => void buy(purchase.clientMutationId)}
-											>
-												<Trans>已採購</Trans>
-											</Button>
-										)}
-									</div>
-								</li>
+												</Fragment>
+											))}
+										</ItemContent>
+										<ItemFooter>
+											{purchase.status === 'bought' && (
+												<Badge variant="secondary">
+													<Trans>已採購</Trans>
+												</Badge>
+											)}
+											<ItemActions>
+												<span className="font-medium tabular-nums">
+													{formatCents(purchase.totalCents)}
+												</span>
+												{purchase.status === 'open' && (
+													<Button
+														variant={purchase._id === firstOpen?._id ? 'default' : 'ghost'}
+														size="sm"
+														onClick={() => void buy(purchase.clientMutationId)}
+													>
+														<Trans>已採購</Trans>
+													</Button>
+												)}
+											</ItemActions>
+										</ItemFooter>
+									</Item>
+								</Fragment>
 							))}
-						</ul>
+						</ItemGroup>
 					)}
 					{pageCount > 1 && (
-						<Pagination aria-label={t`採購記錄分頁`} className="justify-end border-t pt-3">
-							<PaginationContent>
-								<PaginationItem>
-									<Button
-										variant="ghost"
-										size="sm"
-										disabled={safePage === 0}
-										onClick={() => setPage(safePage - 1)}
-									>
-										<Trans>上一頁</Trans>
-									</Button>
-								</PaginationItem>
-								{Array.from({ length: pageCount }, (_, index) => (
-									<PaginationItem key={index}>
+						<>
+							<Separator />
+							<Pagination aria-label={t`採購記錄分頁`} className="justify-end">
+								<PaginationContent>
+									<PaginationItem>
 										<Button
-											variant={index === safePage ? 'default' : 'ghost'}
-											size="icon"
-											aria-label={t`第 ${index + 1} 頁`}
-											aria-current={index === safePage ? 'page' : undefined}
-											onClick={() => setPage(index)}
-											className="tabular-nums"
+											variant="ghost"
+											size="sm"
+											disabled={safePage === 0}
+											onClick={() => setPage(safePage - 1)}
 										>
-											{index + 1}
+											<Trans>上一頁</Trans>
 										</Button>
 									</PaginationItem>
-								))}
-								<PaginationItem>
-									<Button
-										variant="ghost"
-										size="sm"
-										disabled={safePage >= pageCount - 1}
-										onClick={() => setPage(safePage + 1)}
-									>
-										<Trans>下一頁</Trans>
-									</Button>
-								</PaginationItem>
-							</PaginationContent>
-						</Pagination>
+									{Array.from({ length: pageCount }, (_, index) => (
+										<PaginationItem key={index}>
+											<Button
+												variant={index === safePage ? 'default' : 'ghost'}
+												size="icon"
+												aria-label={t`第 ${index + 1} 頁`}
+												aria-current={index === safePage ? 'page' : undefined}
+												onClick={() => setPage(index)}
+												className="tabular-nums"
+											>
+												{index + 1}
+											</Button>
+										</PaginationItem>
+									))}
+									<PaginationItem>
+										<Button
+											variant="ghost"
+											size="sm"
+											disabled={safePage >= pageCount - 1}
+											onClick={() => setPage(safePage + 1)}
+										>
+											<Trans>下一頁</Trans>
+										</Button>
+									</PaginationItem>
+								</PaginationContent>
+							</Pagination>
+						</>
 					)}
 				</CardContent>
 			</Card>
@@ -255,9 +272,12 @@ function BuyAmount({
 	};
 
 	return (
-		<label className="text-muted-foreground mt-1 flex items-center gap-1.5 text-xs">
-			<Trans>補</Trans>
+		<Field orientation="horizontal" className="w-fit">
+			<FieldLabel htmlFor={`buy-${item._id}`}>
+				<Trans>補</Trans>
+			</FieldLabel>
 			<Input
+				id={`buy-${item._id}`}
 				type="number"
 				inputMode="numeric"
 				min={1}
@@ -273,10 +293,10 @@ function BuyAmount({
 						event.currentTarget.blur();
 					}
 				}}
-				className="h-8 w-14 px-2 text-right tabular-nums"
+				className="w-14"
 			/>
-			{item.unit ? t(UNIT_LABELS[item.unit]) : null}
-		</label>
+			{item.unit ? <span>{t(UNIT_LABELS[item.unit])}</span> : null}
+		</Field>
 	);
 }
 
@@ -319,7 +339,7 @@ function ShortfallPurchase({
 			const buy = unitsToRestock(item.quantity, item.safetyQuantity);
 			return buy === 0 ? [] : [{ ...item, buy }];
 		})
-		.toSorted((left, right) => right.buy - left.buy);
+		.sort((left, right) => right.buy - left.buy);
 	const missing = short.filter((item) => !linked.has(item._id));
 
 	/** Creates one open trip from the goods still missing, using the edited quantities. */
@@ -391,38 +411,48 @@ function ShortfallPurchase({
 					</Empty>
 				) : (
 					<form onSubmit={(event) => void submit(event)} className="flex flex-col gap-4">
-						<ul>
-							{short.map((item) => (
-								<li key={item._id} className="flex min-h-11 items-center justify-between gap-3">
-									<span className="truncate text-sm">{item.name}</span>
-									{linked.has(item._id) ? (
-										<Badge variant="secondary">
-											<Trans>已在清單</Trans>
-										</Badge>
-									) : (
-										<label className="text-muted-foreground flex shrink-0 items-center gap-1.5 text-xs">
-											<Trans>補</Trans>
-											<Input
-												type="number"
-												inputMode="numeric"
-												min={0}
-												max={99}
-												step={1}
-												required
-												aria-label={t`補 ${item.name}`}
-												value={amounts[item._id] ?? String(item.buy)}
-												onChange={(event) => {
-													const value = event.target.value;
-													setAmounts((current) => ({ ...current, [item._id]: value }));
-												}}
-												className="h-8 w-14 px-2 text-right tabular-nums"
-											/>
-											{t(UNIT_LABELS[item.unit])}
-										</label>
-									)}
-								</li>
+						<ItemGroup className="gap-0">
+							{short.map((item, index) => (
+								<Fragment key={item._id}>
+									{index > 0 && <ItemSeparator />}
+									<Item size="sm">
+										<ItemContent className="min-w-0">
+											<ItemTitle>{item.name}</ItemTitle>
+										</ItemContent>
+										<ItemActions>
+											{linked.has(item._id) ? (
+												<Badge variant="secondary">
+													<Trans>已在清單</Trans>
+												</Badge>
+											) : (
+												<Field orientation="horizontal" className="w-fit">
+													<FieldLabel htmlFor={`restock-${item._id}`}>
+														<Trans>補</Trans>
+													</FieldLabel>
+													<Input
+														id={`restock-${item._id}`}
+														type="number"
+														inputMode="numeric"
+														min={0}
+														max={99}
+														step={1}
+														required
+														aria-label={t`補 ${item.name}`}
+														value={amounts[item._id] ?? String(item.buy)}
+														onChange={(event) => {
+															const value = event.target.value;
+															setAmounts((current) => ({ ...current, [item._id]: value }));
+														}}
+														className="w-14"
+													/>
+													<span>{t(UNIT_LABELS[item.unit])}</span>
+												</Field>
+											)}
+										</ItemActions>
+									</Item>
+								</Fragment>
 							))}
-						</ul>
+						</ItemGroup>
 						{missing.length > 0 && (
 							<div className="flex flex-wrap items-end justify-between gap-3">
 								<Field className="w-28">

@@ -4,6 +4,7 @@ import { useConvexAuth } from 'convex/react';
 
 import { SignInPanel } from '@/auth';
 import Loader from '@/components/loader';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 /** Sign-in route. */
 export const Route = createFileRoute('/sign-in')({
@@ -18,14 +19,18 @@ function SignInPage() {
 
 	return (
 		<div className="flex min-h-full w-full items-center px-4 py-10">
-			<div className="w-full max-w-sm">
-				<h1 className="text-2xl leading-none font-medium">
-					<Trans>登入物資</Trans>
-				</h1>
-				<div className="mt-6">
+			<Card className="w-full max-w-sm">
+				<CardHeader>
+					<CardTitle>
+						<h1>
+							<Trans>登入物資</Trans>
+						</h1>
+					</CardTitle>
+				</CardHeader>
+				<CardContent>
 					<SignInPanel />
-				</div>
-			</div>
+				</CardContent>
+			</Card>
 		</div>
 	);
 }

@@ -8,13 +8,22 @@ import { isAppErrorCode } from '@goods/shared/error-codes';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Empty, EmptyDescription, EmptyHeader } from '@/components/ui/empty';
+import {
+	Item,
+	ItemActions,
+	ItemContent,
+	ItemDescription,
+	ItemGroup,
+	ItemSeparator,
+	ItemTitle,
+} from '@/components/ui/item';
 import { Skeleton } from '@/components/ui/skeleton';
 import { REJECTION_MESSAGES, STOCK_ERROR_MESSAGES } from '@/features/stock/errors';
 import { SHELF_LABELS, UNIT_LABELS } from '@/features/stock/labels';
@@ -148,17 +157,17 @@ export function Board({ spaceId }: { spaceId: Id<'spaces'> }) {
 						) : (
 							<div className="flex flex-col gap-3">
 								{shelves.map((code) => (
-									<div key={code} className="flex flex-col gap-1">
+									<ItemGroup key={code} className="gap-0">
 										<h3 className="text-muted-foreground text-xs">{shelf(code)}</h3>
-										<ul>
-											{items
-												.filter((item) => item.shelf === code)
-												.map((item) => (
-													<li
-														key={item._id}
-														className="flex min-h-11 items-center gap-3 border-b last:border-b-0"
-													>
-														<span className="min-w-0 flex-1 truncate text-sm">{item.name}</span>
+										{items
+											.filter((item) => item.shelf === code)
+											.map((item, index) => (
+												<Fragment key={item._id}>
+													{index > 0 && <ItemSeparator />}
+													<Item size="sm">
+														<ItemContent className="min-w-0">
+															<ItemTitle>{item.name}</ItemTitle>
+														</ItemContent>
 														{isAttention(item) && item.quantity > 0 && (
 															<Badge variant="outline">
 																{isExpiring(item.freshness) ? (
@@ -177,7 +186,7 @@ export function Board({ spaceId }: { spaceId: Id<'spaces'> }) {
 															unit={unit(item.unit)}
 															safetyQuantity={item.safetyQuantity}
 														/>
-														<span className="flex w-12 shrink-0 items-center justify-end">
+														<ItemActions>
 															{item.quantity > 0 && (
 																<Button
 																	variant="ghost"
@@ -188,11 +197,11 @@ export function Board({ spaceId }: { spaceId: Id<'spaces'> }) {
 																	<Trans>領用</Trans>
 																</Button>
 															)}
-														</span>
-													</li>
-												))}
-										</ul>
-									</div>
+														</ItemActions>
+													</Item>
+												</Fragment>
+											))}
+									</ItemGroup>
 								))}
 							</div>
 						)}
@@ -217,24 +226,26 @@ export function Board({ spaceId }: { spaceId: Id<'spaces'> }) {
 								</EmptyHeader>
 							</Empty>
 						) : (
-							<ul>
-								{board.data.movements.slice(0, 4).map((movement) => (
-									<li
-										key={movement._id}
-										className="flex min-h-11 items-center gap-2 border-b text-sm last:border-b-0"
-									>
-										<span className="min-w-0 flex-1 truncate">
-											{movement.actorLabel} {movement.kind === 'consume' ? t`領走` : t`補上`}{' '}
-											{movement.quantity} {unit(movement.unit)} {movement.itemName}
-										</span>
-										{movement.outcome === 'rejected' && (
-											<Badge variant="destructive">
-												<Trans>沒扣成</Trans>
-											</Badge>
-										)}
-									</li>
+							<ItemGroup className="gap-0">
+								{board.data.movements.slice(0, 4).map((movement, index) => (
+									<Fragment key={movement._id}>
+										{index > 0 && <ItemSeparator />}
+										<Item size="sm">
+											<ItemContent className="min-w-0">
+												<ItemTitle>
+													{movement.actorLabel} {movement.kind === 'consume' ? t`領走` : t`補上`}{' '}
+													{movement.quantity} {unit(movement.unit)} {movement.itemName}
+												</ItemTitle>
+											</ItemContent>
+											{movement.outcome === 'rejected' && (
+												<Badge variant="destructive">
+													<Trans>沒扣成</Trans>
+												</Badge>
+											)}
+										</Item>
+									</Fragment>
 								))}
-							</ul>
+							</ItemGroup>
 						)}
 					</CardContent>
 				</Card>
@@ -295,21 +306,21 @@ function Queue({
 						</EmptyHeader>
 					</Empty>
 				) : (
-					<ul>
-						{rows.slice(0, 4).map((item) => (
-							<li
-								key={item._id}
-								className="flex min-h-11 items-center justify-between gap-3 border-b text-sm last:border-b-0"
-							>
-								<span className="truncate">{item.name}</span>
-								<span className="text-muted-foreground shrink-0 tabular-nums">
-									{item.expiresOn ?? '—'}
-									<span className="text-foreground ml-3">{item.quantity}</span>
-									<span className="ml-1">{unit(item.unit)}</span>
-								</span>
-							</li>
+					<ItemGroup className="gap-0">
+						{rows.slice(0, 4).map((item, index) => (
+							<Fragment key={item._id}>
+								{index > 0 && <ItemSeparator />}
+								<Item size="sm">
+									<ItemContent className="min-w-0">
+										<ItemTitle>{item.name}</ItemTitle>
+									</ItemContent>
+									<ItemDescription className="shrink-0 tabular-nums">
+										{item.expiresOn ?? '—'} {item.quantity} {unit(item.unit)}
+									</ItemDescription>
+								</Item>
+							</Fragment>
 						))}
-					</ul>
+					</ItemGroup>
 				)}
 			</CardContent>
 		</Card>
