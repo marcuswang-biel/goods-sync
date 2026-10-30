@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.2](https://github.com/marcuswang-biel/goods-sync/compare/native-v0.5.1...native-v0.5.2) (2026-10-30)
+
+
+### Bug Fixes
+
+* **native:** format money and sort without Hermes gaps ([bc32532](https://github.com/marcuswang-biel/goods-sync/commit/bc32532c0b10f894666a2c3ac4f4a7d777f749b3))
+
 ## [0.5.1](https://github.com/marcuswang-biel/goods-sync/compare/native-v0.5.0...native-v0.5.1) (2026-10-29)
 
 
