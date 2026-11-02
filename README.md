@@ -64,6 +64,7 @@ Native: `pnpm dev:native`, then open the app in a simulator or development build
 ## More docs
 
 - [AGENTS.md](AGENTS.md): rules for coding agents (and a good summary for humans)
+- [docs/architecture.md](docs/architecture.md): code layout and system design
 - [docs/auth.md](docs/auth.md): how auth is wired, its env vars, and which files are auth-specific
 - [docs/adr/0001-effect-boundary-for-business-logic.md](docs/adr/0001-effect-boundary-for-business-logic.md): where business logic goes
 - [CONTRIBUTING.md](CONTRIBUTING.md): commits, scopes, releases
